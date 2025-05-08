@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "vite-node --watch src/example/index.tsx"
+    "dev": "vite-node --watch src/index.tsx"
   },
   "devDependencies": {
     "@types/bun": "latest",
