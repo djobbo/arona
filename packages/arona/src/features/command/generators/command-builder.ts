@@ -38,20 +38,20 @@ file.addStatements((writer) => {
   )
   writer.writeLine(``)
   writer.writeLine(
-    `import { ApplicationCommandOptionType, SlashCommandBuilder as DJSSlashCommandBuilder  } from "discord.js";`,
+    `import { ApplicationCommandOptionType, SlashCommandBuilder as DJSSlashCommandBuilder  } from "discord.js"`,
   )
   writer.writeLine(
     `import { 
       ${optionTypes.map(({ optionClass }) => optionClass).join(", ")}
-    } from "discord.js";`,
+    } from "discord.js"`,
   )
   writer.writeLine(
-    `import type { ChatInputCommandInteraction} from "discord.js";`,
+    `import type { ChatInputCommandInteraction} from "discord.js"`,
   )
   writer.writeLine(``)
 })
 
-const SlashCommandBuilder = file.addClass({
+file.addClass({
   name: "SlashCommandBuilder",
   extends: "DJSSlashCommandBuilder",
   isExported: true,
@@ -63,10 +63,7 @@ const SlashCommandBuilder = file.addClass({
       initializer: "[]",
     },
   ],
-})
-
-SlashCommandBuilder.addMethods(
-  optionTypes
+  methods: optionTypes
     .map(({ type, method, optionClass }) => {
       return [
         {
@@ -81,24 +78,24 @@ SlashCommandBuilder.addMethods(
             },
           ],
           returnType: `
-          SlashCommandBuilder<
-            Params & {
-              [K in Name]: ReturnType<
-                ChatInputCommandInteraction["options"]["${method}"]
-              >
-            }
-          >
-        `,
+        SlashCommandBuilder<
+          Params & {
+            [K in Name]: ReturnType<
+              ChatInputCommandInteraction["options"]["${method}"]
+            >
+          }
+        >
+      `,
           statements: `
-          const typeSafeOptions =
-            options instanceof ${optionClass}
-              ? options.setName(name)
-              : options(new ${optionClass}()).setName(name);
-          
-          super.add${type}Option(typeSafeOptions, ...args);
-          this.params.push({ name, type: ApplicationCommandOptionType.${type} });
-          return this;
-        `,
+        const typeSafeOptions =
+          options instanceof ${optionClass}
+            ? options.setName(name)
+            : options(new ${optionClass}()).setName(name)
+        
+        super.add${type}Option(typeSafeOptions, ...args)
+        this.params.push({ name, type: ApplicationCommandOptionType.${type} })
+        return this
+      `,
         },
         {
           name: `add${type}Option`,
@@ -109,9 +106,9 @@ SlashCommandBuilder.addMethods(
             },
           ],
           statements: `
-          super.add${type}Option(...args);
-          return this;
-        `,
+        super.add${type}Option(...args);
+        return this;
+      `,
           docs: [
             {
               tags: [
@@ -126,6 +123,61 @@ SlashCommandBuilder.addMethods(
       ]
     })
     .flat(),
-)
+})
+
+file.addInterface({
+  name: "SlashCommandInteraction",
+  isExported: true,
+  typeParameters: [{ name: "Params", default: "{}" }],
+  extends: ["ChatInputCommandInteraction"],
+  properties: [
+    {
+      name: "params",
+      type: "Params",
+    },
+  ],
+})
+
+file.addFunction({
+  name: "getTypedInteraction",
+  isExported: true,
+  typeParameters: [{ name: "Params", default: "{}" }],
+  parameters: [
+    {
+      name: "command",
+      type: "SlashCommandBuilder<Params>",
+    },
+    {
+      name: "interaction",
+      type: "ChatInputCommandInteraction",
+    },
+  ],
+  returnType: "SlashCommandInteraction<Params>",
+  statements: `
+    const params = command.params.reduce(
+      (acc, { name, type }) => {
+        let value = null;
+        switch (type) {
+          ${optionTypes
+            .map(({ type, method }) => {
+              return `case ApplicationCommandOptionType.${type}:
+                  value = interaction.options.${method}(name)
+                  break`
+            })
+            .join("\n")}
+          default:
+            value = interaction.options.get(name)?.value;
+            break;
+        }
+        acc[name] = value
+        return acc
+      },
+      {} as Record<string, unknown>,
+    )
+  
+    ;(interaction as SlashCommandInteraction).params = params
+    return interaction as SlashCommandInteraction<Params>
+  `,
+})
 
 file.saveSync()

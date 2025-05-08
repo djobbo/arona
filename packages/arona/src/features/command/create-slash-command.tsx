@@ -1,7 +1,9 @@
 import { CommandProvider } from "./command-provider"
-import { SlashCommandBuilder } from "./command-builder"
+import {
+  SlashCommandBuilder,
+  type SlashCommandInteraction,
+} from "./command-builder"
 import type { ReactNode } from "react"
-import type { SlashCommandInteraction } from "./helpers/get-typed-interaction"
 
 export const createSlashCommand = <
   Options = {},

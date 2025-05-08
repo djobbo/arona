@@ -4,7 +4,7 @@ import {
   type ClientOptions,
   type Interaction,
 } from "discord.js"
-import { getTypedInteraction } from "../command/command-builder-base"
+import { getTypedInteraction } from "../command/command-builder"
 import { reloadCommands } from "../command/helpers/reload-commands"
 import type { createSlashCommand } from "../command/create-slash-command"
 

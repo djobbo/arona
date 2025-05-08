@@ -272,3 +272,57 @@ export class SlashCommandBuilder<Params = {}> extends DJSSlashCommandBuilder {
     return this
   }
 }
+
+export interface SlashCommandInteraction<Params = {}>
+  extends ChatInputCommandInteraction {
+  params: Params
+}
+
+export function getTypedInteraction<Params = {}>(
+  command: SlashCommandBuilder<Params>,
+  interaction: ChatInputCommandInteraction,
+): SlashCommandInteraction<Params> {
+  const params = command.params.reduce(
+    (acc, { name, type }) => {
+      let value = null
+      switch (type) {
+        case ApplicationCommandOptionType.String:
+          value = interaction.options.getString(name)
+          break
+        case ApplicationCommandOptionType.Integer:
+          value = interaction.options.getInteger(name)
+          break
+        case ApplicationCommandOptionType.Boolean:
+          value = interaction.options.getBoolean(name)
+          break
+        case ApplicationCommandOptionType.User:
+          value = interaction.options.getUser(name)
+          break
+        case ApplicationCommandOptionType.Channel:
+          value = interaction.options.getChannel(name)
+          break
+        case ApplicationCommandOptionType.Role:
+          value = interaction.options.getRole(name)
+          break
+        case ApplicationCommandOptionType.Mentionable:
+          value = interaction.options.getMentionable(name)
+          break
+        case ApplicationCommandOptionType.Number:
+          value = interaction.options.getNumber(name)
+          break
+        case ApplicationCommandOptionType.Attachment:
+          value = interaction.options.getAttachment(name)
+          break
+        default:
+          value = interaction.options.get(name)?.value
+          break
+      }
+      acc[name] = value
+      return acc
+    },
+    {} as Record<string, unknown>,
+  )
+
+  ;(interaction as SlashCommandInteraction).params = params
+  return interaction as SlashCommandInteraction<Params>
+}

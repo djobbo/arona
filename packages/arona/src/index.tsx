@@ -14,14 +14,6 @@ client.once(Events.ClientReady, (readyClient) => {
   console.log(`🚀 Logged in as ${client.user?.tag}`)
 })
 
-const c = new SlashCommandBuilder()
-  .addTypedStringOption("bruh", (option) =>
-    option.setDescription("The input to echo back").setRequired(true),
-  )
-  .addTypedStringOption("hi", (option) =>
-    option.setDescription("The input to echo back").setRequired(true),
-  )
-
 const command = createSlashCommand("ping", {
   command: (command) =>
     command
@@ -31,6 +23,9 @@ const command = createSlashCommand("ping", {
       )
       .addTypedUserOption("us", (option) =>
         option.setDescription("Goat").setRequired(true),
+      )
+      .addTypedChannelOption("channel", (option) =>
+        option.setDescription("Channel").setRequired(true),
       ),
   loader: async (interaction) => {
     console.log("Interaction", interaction.params)
