@@ -16,6 +16,7 @@
   "dependencies": {
     "discord.js": "^14.19.3",
     "react": "^19.1.0",
+    "ts-morph": "^25.0.1",
     "vite": "^6.3.5",
     "vite-node": "^3.1.2"
   }
