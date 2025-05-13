@@ -9,8 +9,8 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js"
-import { assertIsDefined } from "../helpers/asserts"
-import { getFileFromAttachment } from "../helpers/getFileFromAttachment"
+import { assertIsDefined } from "../../helpers/asserts"
+import { getFileFromAttachment } from "../../helpers/get-file-from-attachment"
 import type {
   APIEmbedField,
   BaseMessageOptions,
@@ -28,22 +28,22 @@ import type {
   SelectMenuElements,
   // TextElements, // TODO: [NEXT] TextElements
 } from "../jsx"
-import type { ReaccordNode } from "./nodes/node"
-import type { RootNode } from "./nodes/root"
-import type { TextNode } from "./nodes/text"
+import type { AronaNode } from "./nodes/node"
+import type { AronaRootNode } from "./nodes/root"
+import type { AronaTextNode } from "./nodes/text"
 
 const EMPTY_STRING = "​"
 
-export const renderText = (node: TextNode) => {
+export const renderText = (node: AronaTextNode) => {
   return node.innerText
 }
 
 export const renderInnerText = (
-  node: ReaccordNode,
+  node: AronaNode,
   textElementsOnly?: boolean,
 ): string => {
   if (node.type === "reaccord:__text") {
-    return renderText(node as TextNode)
+    return renderText(node as AronaTextNode)
   }
 
   const innerText = node.children
@@ -76,7 +76,7 @@ export const renderInnerText = (
 }
 
 export const renderFileAttachment = (
-  node: ReaccordNode<FileAttachmentElements["file"]>,
+  node: AronaNode<FileAttachmentElements["file"]>,
 ): { file: FileAttachment } | null => {
   if ("file" in node.props) {
     if (!node.props.file) return null
@@ -93,7 +93,7 @@ export const renderFileAttachment = (
 }
 
 export const renderEmbedFooter = (
-  node: ReaccordNode<EmbedElements["footer"]>,
+  node: AronaNode<EmbedElements["footer"]>,
 ): EmbedFooterOptions => {
   return {
     text: renderInnerText(node),
@@ -102,7 +102,7 @@ export const renderEmbedFooter = (
 }
 
 export const renderEmbedAuthor = (
-  node: ReaccordNode<EmbedElements["author"]>,
+  node: AronaNode<EmbedElements["author"]>,
 ): EmbedAuthorOptions => {
   return {
     name: renderInnerText(node),
@@ -112,7 +112,7 @@ export const renderEmbedAuthor = (
 }
 
 export const renderEmbedField = (
-  node: ReaccordNode<EmbedElements["field"]>,
+  node: AronaNode<EmbedElements["field"]>,
 ): APIEmbedField => {
   assertIsDefined(node.props.title, "Embed fields must have a title")
 
@@ -124,7 +124,7 @@ export const renderEmbedField = (
 }
 
 export const renderEmbedImage = (
-  node: ReaccordNode<EmbedElements["image" | "thumbnail"]>,
+  node: AronaNode<EmbedElements["image" | "thumbnail"]>,
 ): { file?: FileAttachment; filename: string } | null => {
   if ("src" in node.props) {
     if (!node.props.src) return null
@@ -140,7 +140,7 @@ export const renderEmbedImage = (
 }
 
 export const renderEmbedRoot = (
-  node: ReaccordNode<EmbedElements["root"]>,
+  node: AronaNode<EmbedElements["root"]>,
 ): { embed: EmbedBuilder; files: FileAttachment[] } => {
   const embed = new EmbedBuilder({
     url: node.props.url,
@@ -195,7 +195,7 @@ export const renderEmbedRoot = (
 }
 
 export const renderActionRowButton = (
-  node: ReaccordNode<ActionRowElements["button"]>,
+  node: AronaNode<ActionRowElements["button"]>,
 ) => {
   const customId = node.props.customId ?? node.uuid
 
@@ -219,7 +219,7 @@ export const renderActionRowButton = (
 }
 
 export const renderActionRowLink = (
-  node: ReaccordNode<ActionRowElements["link"]>,
+  node: AronaNode<ActionRowElements["link"]>,
 ) => {
   return new ButtonBuilder({
     disabled: node.props.disabled ?? false,
@@ -230,7 +230,7 @@ export const renderActionRowLink = (
 }
 
 export const renderActionRowRoot = (
-  node: ReaccordNode<ActionRowElements["root"]>,
+  node: AronaNode<ActionRowElements["root"]>,
 ) => {
   const actionRow = new ActionRowBuilder<MessageActionRowComponentBuilder>()
 
@@ -261,7 +261,7 @@ export const renderActionRowRoot = (
 }
 
 export const renderSelectMenuOption = (
-  node: ReaccordNode<SelectMenuElements["option"]>,
+  node: AronaNode<SelectMenuElements["option"]>,
 ) => {
   assertIsDefined(node.props.value, "SelectMenu option must have a value")
 
@@ -275,7 +275,7 @@ export const renderSelectMenuOption = (
 }
 
 export const renderSelectMenuRoot = (
-  node: ReaccordNode<SelectMenuElements["root"]>,
+  node: AronaNode<SelectMenuElements["root"]>,
 ) => {
   const actionRow = new ActionRowBuilder<MessageActionRowComponentBuilder>()
 
@@ -316,7 +316,7 @@ export const renderSelectMenuRoot = (
   return { actionRow, customId, listener }
 }
 
-export const renderMessageContent = (root: RootNode) => {
+export const renderMessageContent = (root: AronaRootNode) => {
   const messageContent: BaseMessageOptions = {
     content: "",
     embeds: [],
@@ -406,9 +406,7 @@ export const renderMessageContent = (root: RootNode) => {
   return { messageContent, interactionListeners }
 }
 
-export const renderModalInput = (
-  node: ReaccordNode<ModalElements["input"]>,
-) => {
+export const renderModalInput = (node: AronaNode<ModalElements["input"]>) => {
   const actionRow = new ActionRowBuilder<TextInputBuilder>()
 
   const { name, label, value, placeholder, required, paragraph, onChange } =
@@ -432,7 +430,7 @@ export const renderModalInput = (
 }
 
 export const renderModalWrapper = (
-  node: ReaccordNode<ModalElements["wrapper"]>,
+  node: AronaNode<ModalElements["wrapper"]>,
 ) => {
   const { title } = node.props
 
@@ -478,7 +476,7 @@ export const renderModalWrapper = (
   return { modal, customId, listener }
 }
 
-export const renderModalRoot = (root: ReaccordNode) => {
+export const renderModalRoot = (root: AronaNode) => {
   if (root.type !== "reaccord:__modal-root")
     throw new Error("Invalid modal root")
 

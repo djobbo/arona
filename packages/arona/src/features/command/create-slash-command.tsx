@@ -1,29 +1,32 @@
-import { CommandProvider } from "./command-provider"
+import { CommandProvider, createUseCommandContext } from "./command-provider"
 import {
   SlashCommandBuilder,
   type SlashCommandInteraction,
 } from "./command-builder"
-import type { ReactNode } from "react"
+import { render } from "../renderer/render"
 
 export const createSlashCommand = <
-  Options = {},
+  Params = {},
   LoaderData extends unknown = void,
 >(
   name: string,
   {
     command,
     loader,
-    component,
+    component: Component,
   }: {
     command:
-      | InstanceType<typeof SlashCommandBuilder<Options>>
+      | InstanceType<typeof SlashCommandBuilder<Params>>
       | ((
           command: InstanceType<typeof SlashCommandBuilder>,
-        ) => InstanceType<typeof SlashCommandBuilder<Options>>)
+        ) => InstanceType<typeof SlashCommandBuilder<Params>>)
     loader: (
-      interaction: SlashCommandInteraction<Options>,
+      interaction: SlashCommandInteraction<Params>,
     ) => Promise<LoaderData>
-    component?: ReactNode
+    component?: (props: {
+      interaction: SlashCommandInteraction<Params>
+      loaderData: LoaderData
+    }) => JSX.Element
   },
 ) => {
   return {
@@ -32,18 +35,23 @@ export const createSlashCommand = <
       ? command
       : command(new SlashCommandBuilder())
     ).setName(name),
-    handler: async (interaction: SlashCommandInteraction<Options>) => {
+    handler: async (interaction: SlashCommandInteraction<Params>) => {
       const { commandName } = interaction
       if (commandName !== name) return
 
       const loaderData = await loader(interaction)
-      if (component) {
+      if (Component) {
         render(
-          <CommandProvider interaction={interaction} loaderData={loaderData}>
-            {component}
-          </CommandProvider>,
+          () => (
+            <CommandProvider interaction={interaction} loaderData={loaderData}>
+              <Component interaction={interaction} loaderData={loaderData} />
+            </CommandProvider>
+          ),
+          interaction,
+          {},
         )
       }
     },
+    useCommandContext: createUseCommandContext<Params, LoaderData>(),
   }
 }

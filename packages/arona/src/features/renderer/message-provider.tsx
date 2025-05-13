@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useReducer } from "react"
+import React, { createContext, useContext, useEffect, useReducer } from "react"
 import type { AronaClient } from "../discord-client/client"
 import type { AronaRootNode } from "./nodes/root"
 import type { Message } from "discord.js"
@@ -46,6 +46,11 @@ export const MessageProvider = ({
   rootNode,
   children,
 }: MessageProviderProps) => {
+  // console.log(
+  //   "MessageProvider",
+  //   React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+  // )
+
   return (
     <rootNodeContextInternal.Provider value={rootNode}>
       {children}

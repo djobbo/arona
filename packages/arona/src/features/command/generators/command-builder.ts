@@ -24,10 +24,12 @@ const optionTypes = (
 ).map((type) => {
   const optionClass = `SlashCommand${type}Option`
   const method = `get${type}`
+  const djsOptionClass = `DJS${optionClass}`
 
   return {
     type,
     optionClass,
+    djsOptionClass,
     method,
   }
 })
@@ -42,13 +44,59 @@ file.addStatements((writer) => {
   )
   writer.writeLine(
     `import { 
-      ${optionTypes.map(({ optionClass }) => optionClass).join(", ")}
+      ${optionTypes.map(({ optionClass, djsOptionClass }) => `${optionClass} as ${djsOptionClass}`).join(", ")}
     } from "discord.js"`,
   )
   writer.writeLine(
     `import type { ChatInputCommandInteraction} from "discord.js"`,
   )
   writer.writeLine(``)
+})
+
+optionTypes.forEach(({ optionClass, djsOptionClass }) => {
+  file.addClass({
+    name: optionClass,
+    extends: djsOptionClass,
+    isExported: true,
+    typeParameters: [
+      { name: "Name", constraint: "string", default: "never" },
+      { name: "Required", constraint: "boolean", default: "false" },
+    ],
+    methods: [
+      {
+        name: "setName",
+        typeParameters: [
+          {
+            name: "N",
+            constraint: "string",
+          },
+        ],
+        parameters: [
+          {
+            name: "name",
+            type: "N",
+          },
+        ],
+        statements: `return super.setName(name) as ${optionClass}<N, Required>`,
+      },
+      {
+        name: "setRequired",
+        typeParameters: [
+          {
+            name: "Req",
+            constraint: "boolean",
+          },
+        ],
+        parameters: [
+          {
+            name: "required",
+            type: "Req",
+          },
+        ],
+        statements: `return super.setRequired(required) as ${optionClass}<Name, Req>`,
+      },
+    ],
+  })
 })
 
 file.addClass({
@@ -64,36 +112,48 @@ file.addClass({
     },
   ],
   methods: optionTypes
-    .map(({ type, method, optionClass }) => {
+    .map(({ type, method, optionClass, djsOptionClass }) => {
       return [
         {
           name: `addTyped${type}Option`,
           isGeneric: true,
-          typeParameters: [{ name: "Name", constraint: "string" }],
-          parameters: [
-            { name: "name", type: "Name" },
+          typeParameters: [
             {
-              name: "...[options, ...args]",
-              type: `Parameters<DJSSlashCommandBuilder["add${type}Option"]>`,
+              name: "Name",
+              constraint: "string",
+            },
+            {
+              name: "Required",
+              constraint: "boolean",
+            },
+            {
+              name: "OptionType",
+              constraint: `Exclude<ReturnType<ChatInputCommandInteraction["options"]["${method}"]>, null | undefined>`,
+            },
+          ],
+          parameters: [
+            {
+              name: "options",
+              type: `SlashCommand${type}Option<Name, Required> | ((option: ${optionClass}) => SlashCommand${type}Option<Name, Required>)`,
             },
           ],
           returnType: `
-        SlashCommandBuilder<
-          Params & {
-            [K in Name]: ReturnType<
-              ChatInputCommandInteraction["options"]["${method}"]
-            >
-          }
-        >
-      `,
+            SlashCommandBuilder<
+              Params & (Required extends true ? {
+                [K in Name]: OptionType
+              } :
+              {
+                [K in Name]?: OptionType
+              })>
+          `,
           statements: `
-        const typeSafeOptions =
-          options instanceof ${optionClass}
-            ? options.setName(name)
-            : options(new ${optionClass}()).setName(name)
+        const typeSafeOption =
+          options instanceof ${djsOptionClass}
+            ? options
+            : options(new ${optionClass}<Name, Required>())
         
-        super.add${type}Option(typeSafeOptions, ...args)
-        this.params.push({ name, type: ApplicationCommandOptionType.${type} })
+        super.add${type}Option(typeSafeOption)
+        this.params.push({ name: typeSafeOption.name, type: ApplicationCommandOptionType.${type} })
         return this
       `,
         },

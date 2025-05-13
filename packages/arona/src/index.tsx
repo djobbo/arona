@@ -1,6 +1,5 @@
 import { AronaClient } from "./features/discord-client/client"
 import { Events, GatewayIntentBits } from "discord.js"
-import { SlashCommandBuilder } from "./features/command/command-builder"
 import { createSlashCommand } from "./features/command/create-slash-command"
 
 const client = new AronaClient({
@@ -10,27 +9,46 @@ const client = new AronaClient({
   intents: [GatewayIntentBits.Guilds],
 })
 
-client.once(Events.ClientReady, (readyClient) => {
+client.once(Events.ClientReady, () => {
   console.log(`🚀 Logged in as ${client.user?.tag}`)
 })
+
+const Component = (): JSX.Element => {
+  const {
+    loaderData,
+    interaction: {
+      params: { msg, target },
+    },
+  } = command.useCommandContext()
+
+  return (
+    <>
+      {loaderData.name}
+      Sending {msg} to {target.displayName}
+    </>
+  )
+}
 
 const command = createSlashCommand("ping", {
   command: (command) =>
     command
       .setDescription("Replies with Pong!")
-      .addTypedStringOption("input", (option) =>
-        option.setDescription("The input to echo back").setRequired(true),
+      .addTypedStringOption((option) =>
+        option
+          .setName("msg")
+          .setDescription("The input to echo back")
+          .setRequired(true),
       )
-      .addTypedUserOption("us", (option) =>
-        option.setDescription("Goat").setRequired(true),
-      )
-      .addTypedChannelOption("channel", (option) =>
-        option.setDescription("Channel").setRequired(true),
+      .addTypedUserOption((option) =>
+        option.setName("target").setDescription("Goat").setRequired(true),
       ),
   loader: async (interaction) => {
     console.log("Interaction", interaction.params)
+    return {
+      name: "Hello",
+    }
   },
-  component: <>Hello World</>,
+  component: Component,
 })
 
 client.addCommands([command])

@@ -1,6 +1,9 @@
 import { AronaNode } from "./node"
 import { BaseInteraction, Message } from "discord.js"
-import { debounce } from "../helpers/debounce"
+import { ConcurrentRoot } from "react-reconciler/constants"
+import { MessageProvider } from "../message-provider"
+import { createElement } from "react"
+import { debounce } from "../../../helpers/debounce"
 import { renderMessageContent } from "../renderMessageContent"
 import type { AronaClient } from "../../discord-client/client"
 import type { AronaTextNode } from "./text"
@@ -15,6 +18,7 @@ export class AronaRootNode extends AronaNode {
     AronaNode,
     AronaNode,
     AronaTextNode,
+    unknown,
     unknown,
     unknown
   >
@@ -39,7 +43,6 @@ export class AronaRootNode extends AronaNode {
   lastMessageUpdatePromise: Promise<Message> | null = null
 
   constructor(
-    discordClient: AronaClient,
     interactionRef: InteractionRef,
     messageRenderOptions: MessageRenderOptions,
     reconcilerInstance: Reconciler<
@@ -47,11 +50,13 @@ export class AronaRootNode extends AronaNode {
       AronaNode,
       AronaTextNode,
       unknown,
+      unknown,
       unknown
     >,
   ) {
     super("reaccord:__root")
-    this.discordClient = discordClient
+    // @ts-expect-error client is AronaClient
+    this.discordClient = interactionRef.client
     this.interactionRef = interactionRef
     this.messageRenderOptions = messageRenderOptions
     this.discordClient.addInteractionListener(
@@ -62,12 +67,14 @@ export class AronaRootNode extends AronaNode {
     this.reconcilerInstance = reconcilerInstance
     this.#rootContainer = this.reconcilerInstance.createContainer(
       this,
-      0,
+      ConcurrentRoot,
       null,
       false,
-      null,
+      false,
       "",
-      () => void 0,
+      (error) => {
+        // console.trace("Error in root", error)
+      },
       null,
     )
   }

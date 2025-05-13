@@ -1,8 +1,9 @@
-import { type ReactNode, createContext, use } from "react"
+import { type ReactNode, createContext, useContext, useState } from "react"
+import type { SlashCommandInteraction } from "./command-builder"
 
-interface ICommandContext {
-  interaction
-  loaderData
+export interface ICommandContext<Params = {}, LoaderData = null> {
+  interaction: SlashCommandInteraction<Params>
+  loaderData: LoaderData
 }
 
 const commandContext = createContext<ICommandContext>({
@@ -10,13 +11,15 @@ const commandContext = createContext<ICommandContext>({
   loaderData: null,
 })
 
-export const useCommandContext = () => {
-  const context = use(commandContext)
-  if (!context) {
-    throw new Error("useCommandContext must be used within a CommandProvider")
-  }
+export function createUseCommandContext<Params = {}, LoaderData = null>() {
+  return () => {
+    const context = useContext(commandContext)
+    if (!context) {
+      throw new Error("useCommandContext must be used within a CommandProvider")
+    }
 
-  return context
+    return context as ICommandContext<Params, LoaderData>
+  }
 }
 
 interface CommandProviderProps {

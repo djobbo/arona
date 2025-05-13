@@ -2,39 +2,178 @@
 
 import {
   ApplicationCommandOptionType,
+  SlashCommandAttachmentOption as DJSSlashCommandAttachmentOption,
+  SlashCommandBooleanOption as DJSSlashCommandBooleanOption,
   SlashCommandBuilder as DJSSlashCommandBuilder,
-  SlashCommandAttachmentOption,
-  SlashCommandBooleanOption,
-  SlashCommandChannelOption,
-  SlashCommandIntegerOption,
-  SlashCommandMentionableOption,
-  SlashCommandNumberOption,
-  SlashCommandRoleOption,
-  SlashCommandStringOption,
-  SlashCommandUserOption,
+  SlashCommandChannelOption as DJSSlashCommandChannelOption,
+  SlashCommandIntegerOption as DJSSlashCommandIntegerOption,
+  SlashCommandMentionableOption as DJSSlashCommandMentionableOption,
+  SlashCommandNumberOption as DJSSlashCommandNumberOption,
+  SlashCommandRoleOption as DJSSlashCommandRoleOption,
+  SlashCommandStringOption as DJSSlashCommandStringOption,
+  SlashCommandUserOption as DJSSlashCommandUserOption,
 } from "discord.js"
 import type { ChatInputCommandInteraction } from "discord.js"
+
+export class SlashCommandStringOption<
+  Name extends string = never,
+  Required extends boolean = false,
+> extends DJSSlashCommandStringOption {
+  setName<N extends string>(name: N) {
+    return super.setName(name) as SlashCommandStringOption<N, Required>
+  }
+
+  setRequired<Req extends boolean>(required: Req) {
+    return super.setRequired(required) as SlashCommandStringOption<Name, Req>
+  }
+}
+
+export class SlashCommandIntegerOption<
+  Name extends string = never,
+  Required extends boolean = false,
+> extends DJSSlashCommandIntegerOption {
+  setName<N extends string>(name: N) {
+    return super.setName(name) as SlashCommandIntegerOption<N, Required>
+  }
+
+  setRequired<Req extends boolean>(required: Req) {
+    return super.setRequired(required) as SlashCommandIntegerOption<Name, Req>
+  }
+}
+
+export class SlashCommandBooleanOption<
+  Name extends string = never,
+  Required extends boolean = false,
+> extends DJSSlashCommandBooleanOption {
+  setName<N extends string>(name: N) {
+    return super.setName(name) as SlashCommandBooleanOption<N, Required>
+  }
+
+  setRequired<Req extends boolean>(required: Req) {
+    return super.setRequired(required) as SlashCommandBooleanOption<Name, Req>
+  }
+}
+
+export class SlashCommandUserOption<
+  Name extends string = never,
+  Required extends boolean = false,
+> extends DJSSlashCommandUserOption {
+  setName<N extends string>(name: N) {
+    return super.setName(name) as SlashCommandUserOption<N, Required>
+  }
+
+  setRequired<Req extends boolean>(required: Req) {
+    return super.setRequired(required) as SlashCommandUserOption<Name, Req>
+  }
+}
+
+export class SlashCommandChannelOption<
+  Name extends string = never,
+  Required extends boolean = false,
+> extends DJSSlashCommandChannelOption {
+  setName<N extends string>(name: N) {
+    return super.setName(name) as SlashCommandChannelOption<N, Required>
+  }
+
+  setRequired<Req extends boolean>(required: Req) {
+    return super.setRequired(required) as SlashCommandChannelOption<Name, Req>
+  }
+}
+
+export class SlashCommandRoleOption<
+  Name extends string = never,
+  Required extends boolean = false,
+> extends DJSSlashCommandRoleOption {
+  setName<N extends string>(name: N) {
+    return super.setName(name) as SlashCommandRoleOption<N, Required>
+  }
+
+  setRequired<Req extends boolean>(required: Req) {
+    return super.setRequired(required) as SlashCommandRoleOption<Name, Req>
+  }
+}
+
+export class SlashCommandMentionableOption<
+  Name extends string = never,
+  Required extends boolean = false,
+> extends DJSSlashCommandMentionableOption {
+  setName<N extends string>(name: N) {
+    return super.setName(name) as SlashCommandMentionableOption<N, Required>
+  }
+
+  setRequired<Req extends boolean>(required: Req) {
+    return super.setRequired(required) as SlashCommandMentionableOption<
+      Name,
+      Req
+    >
+  }
+}
+
+export class SlashCommandNumberOption<
+  Name extends string = never,
+  Required extends boolean = false,
+> extends DJSSlashCommandNumberOption {
+  setName<N extends string>(name: N) {
+    return super.setName(name) as SlashCommandNumberOption<N, Required>
+  }
+
+  setRequired<Req extends boolean>(required: Req) {
+    return super.setRequired(required) as SlashCommandNumberOption<Name, Req>
+  }
+}
+
+export class SlashCommandAttachmentOption<
+  Name extends string = never,
+  Required extends boolean = false,
+> extends DJSSlashCommandAttachmentOption {
+  setName<N extends string>(name: N) {
+    return super.setName(name) as SlashCommandAttachmentOption<N, Required>
+  }
+
+  setRequired<Req extends boolean>(required: Req) {
+    return super.setRequired(required) as SlashCommandAttachmentOption<
+      Name,
+      Req
+    >
+  }
+}
 
 export class SlashCommandBuilder<Params = {}> extends DJSSlashCommandBuilder {
   params: { name: string; type: ApplicationCommandOptionType }[] = []
 
-  addTypedStringOption<Name extends string>(
-    name: Name,
-    ...[options, ...args]: Parameters<DJSSlashCommandBuilder["addStringOption"]>
+  addTypedStringOption<
+    Name extends string,
+    Required extends boolean,
+    OptionType extends Exclude<
+      ReturnType<ChatInputCommandInteraction["options"]["getString"]>,
+      null | undefined
+    >,
+  >(
+    options:
+      | SlashCommandStringOption<Name, Required>
+      | ((
+          option: SlashCommandStringOption,
+        ) => SlashCommandStringOption<Name, Required>),
   ): SlashCommandBuilder<
-    Params & {
-      [K in Name]: ReturnType<
-        ChatInputCommandInteraction["options"]["getString"]
-      >
-    }
+    Params &
+      (Required extends true
+        ? {
+            [K in Name]: OptionType
+          }
+        : {
+            [K in Name]?: OptionType
+          })
   > {
-    const typeSafeOptions =
-      options instanceof SlashCommandStringOption
-        ? options.setName(name)
-        : options(new SlashCommandStringOption()).setName(name)
+    const typeSafeOption =
+      options instanceof DJSSlashCommandStringOption
+        ? options
+        : options(new SlashCommandStringOption<Name, Required>())
 
-    super.addStringOption(typeSafeOptions, ...args)
-    this.params.push({ name, type: ApplicationCommandOptionType.String })
+    super.addStringOption(typeSafeOption)
+    this.params.push({
+      name: typeSafeOption.name,
+      type: ApplicationCommandOptionType.String,
+    })
     return this
   }
 
@@ -46,25 +185,39 @@ export class SlashCommandBuilder<Params = {}> extends DJSSlashCommandBuilder {
     return this
   }
 
-  addTypedIntegerOption<Name extends string>(
-    name: Name,
-    ...[options, ...args]: Parameters<
-      DJSSlashCommandBuilder["addIntegerOption"]
-    >
+  addTypedIntegerOption<
+    Name extends string,
+    Required extends boolean,
+    OptionType extends Exclude<
+      ReturnType<ChatInputCommandInteraction["options"]["getInteger"]>,
+      null | undefined
+    >,
+  >(
+    options:
+      | SlashCommandIntegerOption<Name, Required>
+      | ((
+          option: SlashCommandIntegerOption,
+        ) => SlashCommandIntegerOption<Name, Required>),
   ): SlashCommandBuilder<
-    Params & {
-      [K in Name]: ReturnType<
-        ChatInputCommandInteraction["options"]["getInteger"]
-      >
-    }
+    Params &
+      (Required extends true
+        ? {
+            [K in Name]: OptionType
+          }
+        : {
+            [K in Name]?: OptionType
+          })
   > {
-    const typeSafeOptions =
-      options instanceof SlashCommandIntegerOption
-        ? options.setName(name)
-        : options(new SlashCommandIntegerOption()).setName(name)
+    const typeSafeOption =
+      options instanceof DJSSlashCommandIntegerOption
+        ? options
+        : options(new SlashCommandIntegerOption<Name, Required>())
 
-    super.addIntegerOption(typeSafeOptions, ...args)
-    this.params.push({ name, type: ApplicationCommandOptionType.Integer })
+    super.addIntegerOption(typeSafeOption)
+    this.params.push({
+      name: typeSafeOption.name,
+      type: ApplicationCommandOptionType.Integer,
+    })
     return this
   }
 
@@ -76,25 +229,39 @@ export class SlashCommandBuilder<Params = {}> extends DJSSlashCommandBuilder {
     return this
   }
 
-  addTypedBooleanOption<Name extends string>(
-    name: Name,
-    ...[options, ...args]: Parameters<
-      DJSSlashCommandBuilder["addBooleanOption"]
-    >
+  addTypedBooleanOption<
+    Name extends string,
+    Required extends boolean,
+    OptionType extends Exclude<
+      ReturnType<ChatInputCommandInteraction["options"]["getBoolean"]>,
+      null | undefined
+    >,
+  >(
+    options:
+      | SlashCommandBooleanOption<Name, Required>
+      | ((
+          option: SlashCommandBooleanOption,
+        ) => SlashCommandBooleanOption<Name, Required>),
   ): SlashCommandBuilder<
-    Params & {
-      [K in Name]: ReturnType<
-        ChatInputCommandInteraction["options"]["getBoolean"]
-      >
-    }
+    Params &
+      (Required extends true
+        ? {
+            [K in Name]: OptionType
+          }
+        : {
+            [K in Name]?: OptionType
+          })
   > {
-    const typeSafeOptions =
-      options instanceof SlashCommandBooleanOption
-        ? options.setName(name)
-        : options(new SlashCommandBooleanOption()).setName(name)
+    const typeSafeOption =
+      options instanceof DJSSlashCommandBooleanOption
+        ? options
+        : options(new SlashCommandBooleanOption<Name, Required>())
 
-    super.addBooleanOption(typeSafeOptions, ...args)
-    this.params.push({ name, type: ApplicationCommandOptionType.Boolean })
+    super.addBooleanOption(typeSafeOption)
+    this.params.push({
+      name: typeSafeOption.name,
+      type: ApplicationCommandOptionType.Boolean,
+    })
     return this
   }
 
@@ -106,21 +273,39 @@ export class SlashCommandBuilder<Params = {}> extends DJSSlashCommandBuilder {
     return this
   }
 
-  addTypedUserOption<Name extends string>(
-    name: Name,
-    ...[options, ...args]: Parameters<DJSSlashCommandBuilder["addUserOption"]>
+  addTypedUserOption<
+    Name extends string,
+    Required extends boolean,
+    OptionType extends Exclude<
+      ReturnType<ChatInputCommandInteraction["options"]["getUser"]>,
+      null | undefined
+    >,
+  >(
+    options:
+      | SlashCommandUserOption<Name, Required>
+      | ((
+          option: SlashCommandUserOption,
+        ) => SlashCommandUserOption<Name, Required>),
   ): SlashCommandBuilder<
-    Params & {
-      [K in Name]: ReturnType<ChatInputCommandInteraction["options"]["getUser"]>
-    }
+    Params &
+      (Required extends true
+        ? {
+            [K in Name]: OptionType
+          }
+        : {
+            [K in Name]?: OptionType
+          })
   > {
-    const typeSafeOptions =
-      options instanceof SlashCommandUserOption
-        ? options.setName(name)
-        : options(new SlashCommandUserOption()).setName(name)
+    const typeSafeOption =
+      options instanceof DJSSlashCommandUserOption
+        ? options
+        : options(new SlashCommandUserOption<Name, Required>())
 
-    super.addUserOption(typeSafeOptions, ...args)
-    this.params.push({ name, type: ApplicationCommandOptionType.User })
+    super.addUserOption(typeSafeOption)
+    this.params.push({
+      name: typeSafeOption.name,
+      type: ApplicationCommandOptionType.User,
+    })
     return this
   }
 
@@ -130,25 +315,39 @@ export class SlashCommandBuilder<Params = {}> extends DJSSlashCommandBuilder {
     return this
   }
 
-  addTypedChannelOption<Name extends string>(
-    name: Name,
-    ...[options, ...args]: Parameters<
-      DJSSlashCommandBuilder["addChannelOption"]
-    >
+  addTypedChannelOption<
+    Name extends string,
+    Required extends boolean,
+    OptionType extends Exclude<
+      ReturnType<ChatInputCommandInteraction["options"]["getChannel"]>,
+      null | undefined
+    >,
+  >(
+    options:
+      | SlashCommandChannelOption<Name, Required>
+      | ((
+          option: SlashCommandChannelOption,
+        ) => SlashCommandChannelOption<Name, Required>),
   ): SlashCommandBuilder<
-    Params & {
-      [K in Name]: ReturnType<
-        ChatInputCommandInteraction["options"]["getChannel"]
-      >
-    }
+    Params &
+      (Required extends true
+        ? {
+            [K in Name]: OptionType
+          }
+        : {
+            [K in Name]?: OptionType
+          })
   > {
-    const typeSafeOptions =
-      options instanceof SlashCommandChannelOption
-        ? options.setName(name)
-        : options(new SlashCommandChannelOption()).setName(name)
+    const typeSafeOption =
+      options instanceof DJSSlashCommandChannelOption
+        ? options
+        : options(new SlashCommandChannelOption<Name, Required>())
 
-    super.addChannelOption(typeSafeOptions, ...args)
-    this.params.push({ name, type: ApplicationCommandOptionType.Channel })
+    super.addChannelOption(typeSafeOption)
+    this.params.push({
+      name: typeSafeOption.name,
+      type: ApplicationCommandOptionType.Channel,
+    })
     return this
   }
 
@@ -160,21 +359,39 @@ export class SlashCommandBuilder<Params = {}> extends DJSSlashCommandBuilder {
     return this
   }
 
-  addTypedRoleOption<Name extends string>(
-    name: Name,
-    ...[options, ...args]: Parameters<DJSSlashCommandBuilder["addRoleOption"]>
+  addTypedRoleOption<
+    Name extends string,
+    Required extends boolean,
+    OptionType extends Exclude<
+      ReturnType<ChatInputCommandInteraction["options"]["getRole"]>,
+      null | undefined
+    >,
+  >(
+    options:
+      | SlashCommandRoleOption<Name, Required>
+      | ((
+          option: SlashCommandRoleOption,
+        ) => SlashCommandRoleOption<Name, Required>),
   ): SlashCommandBuilder<
-    Params & {
-      [K in Name]: ReturnType<ChatInputCommandInteraction["options"]["getRole"]>
-    }
+    Params &
+      (Required extends true
+        ? {
+            [K in Name]: OptionType
+          }
+        : {
+            [K in Name]?: OptionType
+          })
   > {
-    const typeSafeOptions =
-      options instanceof SlashCommandRoleOption
-        ? options.setName(name)
-        : options(new SlashCommandRoleOption()).setName(name)
+    const typeSafeOption =
+      options instanceof DJSSlashCommandRoleOption
+        ? options
+        : options(new SlashCommandRoleOption<Name, Required>())
 
-    super.addRoleOption(typeSafeOptions, ...args)
-    this.params.push({ name, type: ApplicationCommandOptionType.Role })
+    super.addRoleOption(typeSafeOption)
+    this.params.push({
+      name: typeSafeOption.name,
+      type: ApplicationCommandOptionType.Role,
+    })
     return this
   }
 
@@ -184,25 +401,39 @@ export class SlashCommandBuilder<Params = {}> extends DJSSlashCommandBuilder {
     return this
   }
 
-  addTypedMentionableOption<Name extends string>(
-    name: Name,
-    ...[options, ...args]: Parameters<
-      DJSSlashCommandBuilder["addMentionableOption"]
-    >
+  addTypedMentionableOption<
+    Name extends string,
+    Required extends boolean,
+    OptionType extends Exclude<
+      ReturnType<ChatInputCommandInteraction["options"]["getMentionable"]>,
+      null | undefined
+    >,
+  >(
+    options:
+      | SlashCommandMentionableOption<Name, Required>
+      | ((
+          option: SlashCommandMentionableOption,
+        ) => SlashCommandMentionableOption<Name, Required>),
   ): SlashCommandBuilder<
-    Params & {
-      [K in Name]: ReturnType<
-        ChatInputCommandInteraction["options"]["getMentionable"]
-      >
-    }
+    Params &
+      (Required extends true
+        ? {
+            [K in Name]: OptionType
+          }
+        : {
+            [K in Name]?: OptionType
+          })
   > {
-    const typeSafeOptions =
-      options instanceof SlashCommandMentionableOption
-        ? options.setName(name)
-        : options(new SlashCommandMentionableOption()).setName(name)
+    const typeSafeOption =
+      options instanceof DJSSlashCommandMentionableOption
+        ? options
+        : options(new SlashCommandMentionableOption<Name, Required>())
 
-    super.addMentionableOption(typeSafeOptions, ...args)
-    this.params.push({ name, type: ApplicationCommandOptionType.Mentionable })
+    super.addMentionableOption(typeSafeOption)
+    this.params.push({
+      name: typeSafeOption.name,
+      type: ApplicationCommandOptionType.Mentionable,
+    })
     return this
   }
 
@@ -214,23 +445,39 @@ export class SlashCommandBuilder<Params = {}> extends DJSSlashCommandBuilder {
     return this
   }
 
-  addTypedNumberOption<Name extends string>(
-    name: Name,
-    ...[options, ...args]: Parameters<DJSSlashCommandBuilder["addNumberOption"]>
+  addTypedNumberOption<
+    Name extends string,
+    Required extends boolean,
+    OptionType extends Exclude<
+      ReturnType<ChatInputCommandInteraction["options"]["getNumber"]>,
+      null | undefined
+    >,
+  >(
+    options:
+      | SlashCommandNumberOption<Name, Required>
+      | ((
+          option: SlashCommandNumberOption,
+        ) => SlashCommandNumberOption<Name, Required>),
   ): SlashCommandBuilder<
-    Params & {
-      [K in Name]: ReturnType<
-        ChatInputCommandInteraction["options"]["getNumber"]
-      >
-    }
+    Params &
+      (Required extends true
+        ? {
+            [K in Name]: OptionType
+          }
+        : {
+            [K in Name]?: OptionType
+          })
   > {
-    const typeSafeOptions =
-      options instanceof SlashCommandNumberOption
-        ? options.setName(name)
-        : options(new SlashCommandNumberOption()).setName(name)
+    const typeSafeOption =
+      options instanceof DJSSlashCommandNumberOption
+        ? options
+        : options(new SlashCommandNumberOption<Name, Required>())
 
-    super.addNumberOption(typeSafeOptions, ...args)
-    this.params.push({ name, type: ApplicationCommandOptionType.Number })
+    super.addNumberOption(typeSafeOption)
+    this.params.push({
+      name: typeSafeOption.name,
+      type: ApplicationCommandOptionType.Number,
+    })
     return this
   }
 
@@ -242,25 +489,39 @@ export class SlashCommandBuilder<Params = {}> extends DJSSlashCommandBuilder {
     return this
   }
 
-  addTypedAttachmentOption<Name extends string>(
-    name: Name,
-    ...[options, ...args]: Parameters<
-      DJSSlashCommandBuilder["addAttachmentOption"]
-    >
+  addTypedAttachmentOption<
+    Name extends string,
+    Required extends boolean,
+    OptionType extends Exclude<
+      ReturnType<ChatInputCommandInteraction["options"]["getAttachment"]>,
+      null | undefined
+    >,
+  >(
+    options:
+      | SlashCommandAttachmentOption<Name, Required>
+      | ((
+          option: SlashCommandAttachmentOption,
+        ) => SlashCommandAttachmentOption<Name, Required>),
   ): SlashCommandBuilder<
-    Params & {
-      [K in Name]: ReturnType<
-        ChatInputCommandInteraction["options"]["getAttachment"]
-      >
-    }
+    Params &
+      (Required extends true
+        ? {
+            [K in Name]: OptionType
+          }
+        : {
+            [K in Name]?: OptionType
+          })
   > {
-    const typeSafeOptions =
-      options instanceof SlashCommandAttachmentOption
-        ? options.setName(name)
-        : options(new SlashCommandAttachmentOption()).setName(name)
+    const typeSafeOption =
+      options instanceof DJSSlashCommandAttachmentOption
+        ? options
+        : options(new SlashCommandAttachmentOption<Name, Required>())
 
-    super.addAttachmentOption(typeSafeOptions, ...args)
-    this.params.push({ name, type: ApplicationCommandOptionType.Attachment })
+    super.addAttachmentOption(typeSafeOption)
+    this.params.push({
+      name: typeSafeOption.name,
+      type: ApplicationCommandOptionType.Attachment,
+    })
     return this
   }
 
