@@ -20,8 +20,8 @@
     "discord.js": "^14.14.1",
     "playwright-core": "^1.43.1",
     "reaccord": "workspace:0.0.0-dev",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

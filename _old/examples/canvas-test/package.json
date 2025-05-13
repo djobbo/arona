@@ -1,5 +1,5 @@
 {
-  "name": "@example/console",
+  "name": "@example/canvas-test",
   "version": "0.0.0-dev",
   "main": "out/index.js",
   "private": true,
@@ -15,10 +15,11 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@reaccord/chalk": "workspace:0.0.0-dev",
+    "@reaccord/canvas": "workspace:0.0.0-dev",
+    "@tanstack/react-query": "^5.29.2",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
     "reaccord": "workspace:0.0.0-dev",
-    "react": "^18.2.0"
+    "react": "^19.1.0"
   }
 }

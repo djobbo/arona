@@ -1,7 +1,7 @@
 import { BaseInteraction, Message } from "discord.js"
 import { ReaccordNode } from "./ReaccordNode"
 import { debounce } from "../helpers/debounce"
-import { renderMessageContent } from "../renderer/renderMessageContent"
+import { renderMessageContent } from "./renderMessageContent"
 import { renderWithRootContext } from "./renderWithRootContext"
 import type { Client, MessageRenderOptions } from "../Client"
 import type { FiberRoot, Reconciler } from "react-reconciler"

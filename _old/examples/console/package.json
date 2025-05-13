@@ -1,5 +1,5 @@
 {
-  "name": "@example/simple-counter",
+  "name": "@example/console",
   "version": "0.0.0-dev",
   "main": "out/index.js",
   "private": true,
@@ -15,10 +15,10 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@reaccord/canvas": "workspace:0.0.0-dev",
+    "@reaccord/chalk": "workspace:0.0.0-dev",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
     "reaccord": "workspace:0.0.0-dev",
-    "react": "^18.2.0"
+    "react": "^19.1.0"
   }
 }
