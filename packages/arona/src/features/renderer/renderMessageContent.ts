@@ -2,13 +2,16 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  ContainerBuilder,
   EmbedBuilder,
   ModalBuilder,
+  SeparatorBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
   TextDisplayBuilder,
   TextInputBuilder,
   TextInputStyle,
+  resolveColor,
 } from "discord.js"
 import { assertIsDefined } from "../../helpers/asserts"
 import { getFileFromAttachment } from "../../helpers/get-file-from-attachment"
@@ -319,7 +322,14 @@ export const renderSelectMenuRoot = (
   return { actionRow, customId, listener }
 }
 
-export const renderMessageContent = (root: AronaRootNode) => {
+const renderSeparator = (node: AronaNode): SeparatorBuilder => {
+  return new SeparatorBuilder({
+    divider: node.props.divider,
+    spacing: node.props.spacing,
+  })
+}
+
+export const renderMessageContent = (root: AronaNode) => {
   const components: JSONEncodable<APIMessageTopLevelComponent>[] = []
   const files: FileAttachment[] = []
 
@@ -330,6 +340,30 @@ export const renderMessageContent = (root: AronaRootNode) => {
 
   root.children.forEach((child) => {
     switch (child.type) {
+      case "arona:container": {
+        const { messageContent, interactionListeners: childListeners } =
+          renderMessageContent(child)
+        const container = new ContainerBuilder({
+          components: messageContent.components,
+          accent_color: child.props.accentColor
+            ? resolveColor(child.props.accentColor)
+            : undefined,
+          spoiler: child.props.spoiler,
+        })
+
+        components.push(container)
+        files.push(...messageContent.files)
+
+        childListeners.forEach((listener, customId) => {
+          if (interactionListeners.has(customId))
+            throw new Error(
+              `Interaction listener with customId '${customId}' already exists, customId must be unique`,
+            )
+
+          interactionListeners.set(customId, listener)
+        })
+        return
+      }
       case "reaccord:file-attachment":
       case "reaccord:image-attachment": {
         const fileAttachment = renderFileAttachment(child)
@@ -376,9 +410,13 @@ export const renderMessageContent = (root: AronaRootNode) => {
         components.push(actionRow)
         return
       }
+      case "arona:separator": {
+        const separator = renderSeparator(child)
+        components.push(separator)
+        return
+      }
       case "arona:text-root": {
         const textContent = renderInnerText(child)
-        console.log("Text content", textContent, textContent.length)
         if (textContent.length < 1) return
 
         components.push(

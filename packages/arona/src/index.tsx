@@ -1,7 +1,9 @@
 import {
   ActionRow,
   Button,
+  Container,
   LinkButton,
+  Separator,
   Text,
 } from "./features/renderer/components"
 import { AronaClient } from "./features/discord-client/client"
@@ -30,17 +32,7 @@ const Component = (): JSX.Element => {
   const [count, setCount] = useState(0)
 
   return (
-    <>
-      <Text>
-        {loaderData.greeting} Sending {msg} to {`<@${target.id}>`}
-      </Text>
-      <Button
-        style={ButtonStyle.Danger}
-        onClick={() => setCount((prev) => prev + 1)}
-      >
-        Hello {count}
-      </Button>
-      <LinkButton url="https://google.com">Google</LinkButton>
+    <Container accentColor="Yellow">
       <ActionRow>
         <Button
           style={ButtonStyle.Primary}
@@ -58,8 +50,21 @@ const Component = (): JSX.Element => {
         >
           Click me
         </Button>
+        <LinkButton url="https://google.com">Google</LinkButton>
       </ActionRow>
-    </>
+      <Separator />
+      <Text>
+        # {loaderData.greeting} Sending {msg} to {`<@${target.id}>`}
+      </Text>
+      <Button
+        style={ButtonStyle.Danger}
+        onClick={() => setCount((prev) => prev + 1)}
+      >
+        Increment
+      </Button>
+      <Separator />
+      <Text>## Count `{count}`</Text>
+    </Container>
   )
 }
 

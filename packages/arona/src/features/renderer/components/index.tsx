@@ -2,6 +2,8 @@
 
 import {
   type APIAttachment,
+  type APIContainerComponent,
+  type APISeparatorComponent,
   type Attachment,
   type AttachmentBuilder,
   type AttachmentPayload,
@@ -20,6 +22,8 @@ import { forwardRef } from "react"
 import type { FC, PropsWithChildren, ReactNode } from "react"
 import type { Stream } from "node:stream"
 
+type AronaProps<T> = Omit<T, "type" | "id" | "customId">
+
 export type FileAttachment =
   | string
   | BufferResolvable
@@ -36,6 +40,23 @@ export type FileAttachmentElements = {
   image: _FileAttachmentBase
 }
 
+// Layout Elements
+
+interface ContainerProps
+  extends AronaProps<
+    Omit<APIContainerComponent, "accent_color" | "components">
+  > {
+  accentColor?: ColorResolvable
+}
+
+export const Container = "arona:container" as unknown as FC<
+  PropsWithChildren<ContainerProps>
+>
+
+export const Separator = "arona:separator" as unknown as FC<
+  AronaProps<APISeparatorComponent>
+>
+
 // Text Elements
 
 export const Text = "arona:text-root" as unknown as FC<PropsWithChildren<{}>>
@@ -47,7 +68,7 @@ export const ActionRow = "arona:action-row" as unknown as FC<
 >
 
 interface ButtonProps
-  extends Partial<Omit<InteractionButtonComponentData, "type" | "customId">> {
+  extends Partial<AronaProps<InteractionButtonComponentData>> {
   /**
    * @deprecated Custom IDs are not recommended unless you know what you're doing.
    * They are used to identify the button in each interaction.
@@ -69,7 +90,7 @@ interface ButtonProps
    * }}>...</Button>
    */
   onClick?: (interaction: ButtonInteraction) => any | Promise<any>
-  style?: Exclude<ButtonStyle, ButtonStyle.Link>
+  style?: Exclude<InteractionButtonComponentData["style"], ButtonStyle.Link>
 }
 
 export const Button = "arona:button" as unknown as FC<
@@ -77,5 +98,5 @@ export const Button = "arona:button" as unknown as FC<
 >
 
 export const LinkButton = "arona:link-button" as unknown as FC<
-  PropsWithChildren<Partial<Omit<LinkButtonComponentData, "type" | "style">>>
+  PropsWithChildren<Partial<Omit<AronaProps<LinkButtonComponentData>, "style">>>
 >
