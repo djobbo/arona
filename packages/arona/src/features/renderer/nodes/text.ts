@@ -4,7 +4,7 @@ export class AronaTextNode extends AronaNode {
   #textContent: string = ""
 
   constructor(textContent: string) {
-    super("reaccord:__text")
+    super("arona:__text")
     this.#textContent = textContent
   }
 

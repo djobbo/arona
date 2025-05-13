@@ -2,14 +2,23 @@
 
 import { forwardRef } from "react"
 import type {
+  APIAttachment,
+  APIMessageTopLevelComponent,
+  ActionRowData,
   Attachment,
   AttachmentBuilder,
+  AttachmentPayload,
+  BufferResolvable,
   ButtonInteraction,
   ButtonStyle,
   ColorResolvable,
   ComponentEmojiResolvable,
+  JSONEncodable,
+  MessageActionRowComponentBuilder,
+  MessageActionRowComponentData,
   ModalSubmitInteraction,
   StringSelectMenuInteraction,
+  TopLevelComponentData,
 } from "discord.js"
 import type { FC, ReactNode } from "react"
 import type { Stream } from "node:stream"
@@ -40,11 +49,21 @@ import type { Stream } from "node:stream"
 // FileAttachment Elements
 
 export type FileAttachment =
-  | Buffer
-  | Stream
   | string
-  | AttachmentBuilder
+  | BufferResolvable
+  | Stream
+  | JSONEncodable<APIAttachment>
   | Attachment
+  | AttachmentBuilder
+  | AttachmentPayload
+
+export type MessageComponent =
+  | JSONEncodable<APIMessageTopLevelComponent>
+  | TopLevelComponentData
+  | ActionRowData<
+      MessageActionRowComponentData | MessageActionRowComponentBuilder
+    >
+  | APIMessageTopLevelComponent
 
 type _FileAttachmentBase = { file: FileAttachment } | { src: string }
 

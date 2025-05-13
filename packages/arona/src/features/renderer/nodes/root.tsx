@@ -1,8 +1,12 @@
 import { AronaNode } from "./node"
-import { BaseInteraction, Message } from "discord.js"
+import {
+  BaseInteraction,
+  Message,
+  MessageFlags,
+  TextDisplayBuilder,
+} from "discord.js"
 import { ConcurrentRoot } from "react-reconciler/constants"
 import { MessageProvider } from "../message-provider"
-import { createElement } from "react"
 import { debounce } from "../../../helpers/debounce"
 import { renderMessageContent } from "../renderMessageContent"
 import type { AronaClient } from "../../discord-client/client"
@@ -12,13 +16,13 @@ import type { Interaction } from "discord.js"
 import type { InteractionRef } from "../render"
 
 const MESSAGE_UPDATE_DEBOUNCE_MS = 50
+const MESSAGE_FLAGS = MessageFlags.IsComponentsV2
 
 export class AronaRootNode extends AronaNode {
   reconcilerInstance: Reconciler<
     AronaNode,
     AronaNode,
     AronaTextNode,
-    unknown,
     unknown,
     unknown
   >
@@ -50,19 +54,15 @@ export class AronaRootNode extends AronaNode {
       AronaNode,
       AronaTextNode,
       unknown,
-      unknown,
       unknown
     >,
   ) {
-    super("reaccord:__root")
+    super("arona:__root")
     // @ts-expect-error client is AronaClient
     this.discordClient = interactionRef.client
     this.interactionRef = interactionRef
     this.messageRenderOptions = messageRenderOptions
-    this.discordClient.addInteractionListener(
-      this.uuid,
-      this.#globalInteractionListener,
-    )
+    this.discordClient.addRoot(this)
 
     this.reconcilerInstance = reconcilerInstance
     this.#rootContainer = this.reconcilerInstance.createContainer(
@@ -80,6 +80,7 @@ export class AronaRootNode extends AronaNode {
   }
 
   unmount() {
+    console.log("Unmounting root")
     this.unmounted = true
     this.#unmountTimeout && clearTimeout(this.#unmountTimeout)
     this.#interactionListeners?.clear()
@@ -87,7 +88,7 @@ export class AronaRootNode extends AronaNode {
     this.reconcilerInstance.updateContainer(null, this.#rootContainer, null)
   }
 
-  #globalInteractionListener(interaction: Interaction) {
+  interactionListener(interaction: Interaction) {
     if (this.unmounted || !this.message) return
     if (!("customId" in interaction)) return
 
@@ -136,20 +137,30 @@ export class AronaRootNode extends AronaNode {
         const createMessageAndHydrate = async () => {
           if (!this.interactionRef) throw new Error("No ref")
 
-          let reply: Message
+          let reply: Message | null | undefined = null
 
           if (this.interactionRef instanceof Message) {
-            reply = await this.interactionRef.reply(messageContent)
-          } else if (this.interactionRef instanceof BaseInteraction) {
             reply = await this.interactionRef.reply({
               ...messageContent,
-              ephemeral: this.messageRenderOptions?.ephemeral ?? false,
-              fetchReply: true,
+              flags: MESSAGE_FLAGS,
             })
+          } else if (this.interactionRef instanceof BaseInteraction) {
+            reply = await this.interactionRef
+              .reply({
+                ...messageContent,
+                ephemeral: this.messageRenderOptions?.ephemeral ?? false,
+                withResponse: true,
+                flags: MESSAGE_FLAGS,
+              })
+              .then((res) => res.resource?.message)
           } else {
-            reply = await this.interactionRef.send(messageContent)
+            reply = await this.interactionRef.send({
+              ...messageContent,
+              flags: MESSAGE_FLAGS,
+            })
           }
 
+          if (!reply) throw new Error("No message created")
           this.message = reply
 
           if (this.hydrationHooks.length > 0) {

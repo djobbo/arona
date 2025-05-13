@@ -1,7 +1,7 @@
 import { AronaClient } from "./features/discord-client/client"
 import { GatewayIntentBits } from "discord.js"
 import { render } from "./features/renderer/render"
-import React, { useState } from "react"
+import { useState } from "react"
 
 const client = new AronaClient({
   token: process.env.DISCORD_APP_TOKEN!,

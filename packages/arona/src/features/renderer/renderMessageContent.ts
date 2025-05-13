@@ -6,6 +6,7 @@ import {
   ModalBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
+  TextDisplayBuilder,
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js"
@@ -13,16 +14,16 @@ import { assertIsDefined } from "../../helpers/asserts"
 import { getFileFromAttachment } from "../../helpers/get-file-from-attachment"
 import type {
   APIEmbedField,
-  BaseMessageOptions,
+  APIMessageTopLevelComponent,
   EmbedAuthorOptions,
   EmbedFooterOptions,
   Interaction,
+  JSONEncodable,
   MessageActionRowComponentBuilder,
 } from "discord.js"
 import type {
   ActionRowElements,
   EmbedElements,
-  FileAttachment,
   FileAttachmentElements,
   ModalElements,
   SelectMenuElements,
@@ -31,19 +32,20 @@ import type {
 import type { AronaNode } from "./nodes/node"
 import type { AronaRootNode } from "./nodes/root"
 import type { AronaTextNode } from "./nodes/text"
+import type { FileAttachment } from "./components"
 
 const EMPTY_STRING = "​"
 
-export const renderText = (node: AronaTextNode) => {
-  return node.innerText
+const isTextNode = (node: AronaNode): node is AronaTextNode => {
+  return node.type === "arona:__text"
 }
 
 export const renderInnerText = (
   node: AronaNode,
   textElementsOnly?: boolean,
 ): string => {
-  if (node.type === "reaccord:__text") {
-    return renderText(node as AronaTextNode)
+  if (isTextNode(node)) {
+    return node.innerText
   }
 
   const innerText = node.children
@@ -53,7 +55,7 @@ export const renderInnerText = (
   if (!innerText) return ""
 
   switch (node.type) {
-    case "reaccord:__text":
+    case "arona:__text":
       return innerText
     case "reaccord:text-br":
       return "\n"
@@ -167,6 +169,7 @@ export const renderEmbedRoot = (
       case "reaccord:embed-author":
         const author = renderEmbedAuthor(child)
         if (author) embed.setAuthor(author)
+        return
       case "reaccord:embed-field":
         const field = renderEmbedField(child)
         embed.addFields(field)
@@ -241,12 +244,12 @@ export const renderActionRowRoot = (
 
   node.children.forEach((child) => {
     switch (child.type) {
-      case "reaccord:actionrow-button":
+      case "arona:button":
         const { button, customId, listener } = renderActionRowButton(child)
         actionRow.addComponents(button)
         interactionListeners.set(customId, listener)
         return
-      case "reaccord:actionrow-link":
+      case "arona:link-button":
         const linkButton = renderActionRowLink(child)
         actionRow.addComponents(linkButton)
         return
@@ -317,12 +320,8 @@ export const renderSelectMenuRoot = (
 }
 
 export const renderMessageContent = (root: AronaRootNode) => {
-  const messageContent: BaseMessageOptions = {
-    content: "",
-    embeds: [],
-    components: [],
-    files: [],
-  }
+  const components: JSONEncodable<APIMessageTopLevelComponent>[] = []
+  const files: FileAttachment[] = []
 
   const interactionListeners = new Map<
     string,
@@ -335,19 +334,14 @@ export const renderMessageContent = (root: AronaRootNode) => {
       case "reaccord:image-attachment": {
         const fileAttachment = renderFileAttachment(child)
         if (fileAttachment) {
-          messageContent.files!.push(fileAttachment.file)
+          files.push(fileAttachment.file)
         }
         return
       }
-      case "reaccord:embed-root":
-        const { embed, files: embedFiles } = renderEmbedRoot(child)
-        messageContent.embeds!.push(embed)
-        messageContent.files!.push(...embedFiles)
-        return
-      case "reaccord:actionrow-root": {
+      case "arona:action-row": {
         const { actionRow, interactionListeners: actionRowListeners } =
           renderActionRowRoot(child)
-        messageContent.components!.push(actionRow)
+        components.push(actionRow)
 
         actionRowListeners.forEach((listener, customId) => {
           if (interactionListeners.has(customId))
@@ -361,49 +355,58 @@ export const renderMessageContent = (root: AronaRootNode) => {
       }
       case "reaccord:selectmenu-root": {
         const { actionRow, customId, listener } = renderSelectMenuRoot(child)
-        messageContent.components!.push(actionRow)
+        components.push(actionRow)
         interactionListeners.set(customId, listener)
         return
       }
-      case "reaccord:actionrow-button": {
+      case "arona:button": {
         const actionRow =
           new ActionRowBuilder<MessageActionRowComponentBuilder>()
         const { button, customId, listener } = renderActionRowButton(child)
         actionRow.addComponents(button)
-        messageContent.components!.push(actionRow)
+        components.push(actionRow)
         interactionListeners.set(customId, listener)
         return
       }
-      case "reaccord:actionrow-link": {
+      case "arona:link-button": {
         const actionRow =
           new ActionRowBuilder<MessageActionRowComponentBuilder>()
         const linkButton = renderActionRowLink(child)
         actionRow.addComponents(linkButton)
-        messageContent.components!.push(actionRow)
+        components.push(actionRow)
+        return
+      }
+      case "arona:text-root": {
+        const textContent = renderInnerText(child)
+        console.log("Text content", textContent, textContent.length)
+        if (textContent.length < 1) return
+
+        components.push(
+          new TextDisplayBuilder({
+            content: textContent,
+          }),
+        )
         return
       }
       default:
-        try {
-          const textContent = renderInnerText(child, true)
-          messageContent.content += textContent
-        } catch {
-          throw new Error(
-            `Unexpected element type: ${child.type} at root level`,
-          )
-        }
+        throw new Error(`Unexpected element type: ${child.type} at root level`)
     }
   })
 
-  if (
-    !messageContent.content &&
-    (!messageContent.embeds || messageContent.embeds.length === 0) &&
-    (!messageContent.files || messageContent.files.length === 0) &&
-    (!messageContent.components || messageContent.components.length === 0)
-  ) {
-    messageContent.content = EMPTY_STRING
-  }
+  const isEmptyMessage = components.length === 0
 
-  return { messageContent, interactionListeners }
+  return {
+    messageContent: {
+      components,
+      files,
+      ...(isEmptyMessage
+        ? {
+            content: EMPTY_STRING,
+          }
+        : {}),
+    },
+    interactionListeners,
+  }
 }
 
 export const renderModalInput = (node: AronaNode<ModalElements["input"]>) => {

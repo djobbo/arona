@@ -6,6 +6,7 @@ import {
 } from "discord.js"
 import { getTypedInteraction } from "../command/command-builder"
 import { reloadCommands } from "../command/helpers/reload-commands"
+import type { AronaRootNode } from "../renderer/nodes/root"
 import type { createSlashCommand } from "../command/create-slash-command"
 
 interface AronaClientOptions extends ClientOptions {
@@ -26,10 +27,7 @@ export class AronaClient extends Client {
     string,
     Omit<ReturnType<typeof createSlashCommand>, "name">
   >()
-  #interactionListeners = new Map<
-    string,
-    (interaction: Interaction) => unknown
-  >()
+  #interactionRoots = new Map<string, AronaRootNode>()
 
   constructor({ token, devGuildId, clientId, ...options }: AronaClientOptions) {
     super(options)
@@ -56,7 +54,10 @@ export class AronaClient extends Client {
 
   async destroy() {
     super.off("interactionCreate", this.globalInteractionListener)
-    this.#interactionListeners.clear()
+    this.#interactionRoots.forEach((root) => {
+      root.unmount()
+    })
+    this.#interactionRoots.clear()
     super.destroy()
   }
 
@@ -76,21 +77,18 @@ export class AronaClient extends Client {
       }
     }
 
-    this.#interactionListeners.forEach((listener) => {
-      listener(interaction)
+    this.#interactionRoots.forEach((root) => {
+      root.interactionListener(interaction)
     })
   }
 
-  addInteractionListener(
-    key: string,
-    listener: (...args: ClientEvents["interactionCreate"]) => void,
-  ) {
-    this.#interactionListeners.set(key, listener)
+  addRoot(root: AronaRootNode) {
+    this.#interactionRoots.set(root.uuid, root)
     return this
   }
 
-  removeInteractionListener(key: string) {
-    this.#interactionListeners.delete(key)
+  removeInteractionListener(uuid: string) {
+    this.#interactionRoots.delete(uuid)
     return this
   }
 

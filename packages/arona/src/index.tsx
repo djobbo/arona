@@ -1,6 +1,13 @@
+import {
+  ActionRow,
+  Button,
+  LinkButton,
+  Text,
+} from "./features/renderer/components"
 import { AronaClient } from "./features/discord-client/client"
-import { Events, GatewayIntentBits } from "discord.js"
+import { ButtonStyle, Events, GatewayIntentBits } from "discord.js"
 import { createSlashCommand } from "./features/command/create-slash-command"
+import { useState } from "react"
 
 const client = new AronaClient({
   token: process.env.DISCORD_APP_TOKEN!,
@@ -20,11 +27,38 @@ const Component = (): JSX.Element => {
       params: { msg, target },
     },
   } = command.useCommandContext()
+  const [count, setCount] = useState(0)
 
   return (
     <>
-      {loaderData.name}
-      Sending {msg} to {target.displayName}
+      <Text>
+        {loaderData.greeting} Sending {msg} to {`<@${target.id}>`}
+      </Text>
+      <Button
+        style={ButtonStyle.Danger}
+        onClick={() => setCount((prev) => prev + 1)}
+      >
+        Hello {count}
+      </Button>
+      <LinkButton url="https://google.com">Google</LinkButton>
+      <ActionRow>
+        <Button
+          style={ButtonStyle.Primary}
+          onClick={() => {
+            console.log("Clicked")
+          }}
+        >
+          Click me
+        </Button>
+        <Button
+          style={ButtonStyle.Secondary}
+          onClick={() => {
+            console.log("Clicked")
+          }}
+        >
+          Click me
+        </Button>
+      </ActionRow>
     </>
   )
 }
@@ -45,7 +79,7 @@ const command = createSlashCommand("ping", {
   loader: async (interaction) => {
     console.log("Interaction", interaction.params)
     return {
-      name: "Hello",
+      greeting: "Hello",
     }
   },
   component: Component,

@@ -8,11 +8,11 @@ import type {
   Message,
   MessageComponentInteraction,
   ModalSubmitInteraction,
-  TextBasedChannel,
+  SendableChannels,
 } from "discord.js"
 
 export type InteractionRef =
-  | TextBasedChannel
+  | SendableChannels
   | Message
   | ChatInputCommandInteraction
   | ContextMenuCommandInteraction
