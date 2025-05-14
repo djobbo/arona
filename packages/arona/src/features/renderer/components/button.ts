@@ -28,7 +28,7 @@ interface ButtonProps
    *  return true
    * }}>...</Button>
    */
-  onClick?: (interaction: ButtonInteraction) => any | Promise<any>
+  onClick?: (interaction: ButtonInteraction) => unknown | Promise<unknown>
   style?: Exclude<InteractionButtonComponentData["style"], ButtonStyle.Link>
 }
 
