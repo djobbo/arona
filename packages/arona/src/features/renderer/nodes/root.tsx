@@ -194,3 +194,7 @@ export class AronaRootNode extends AronaNode {
     return this.message
   }, MESSAGE_UPDATE_DEBOUNCE_MS)
 }
+
+export const isRootNode = (node?: AronaNode | null): node is AronaRootNode => {
+  return node?.type === "arona:__root"
+}

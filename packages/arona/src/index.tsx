@@ -3,6 +3,7 @@ import {
   Button,
   Container,
   LinkButton,
+  Section,
   Separator,
   Text,
 } from "./features/renderer/components"
@@ -33,6 +34,24 @@ const Component = (): JSX.Element => {
 
   return (
     <Container accentColor="Yellow">
+      <Button
+        style={ButtonStyle.Danger}
+        onClick={() => setCount((prev) => prev + 1)}
+      >
+        Increment
+      </Button>
+      <Section
+        accessory={
+          <Button onClick={() => setCount((prev) => prev - 1)}>
+            Accessory
+          </Button>
+        }
+      >
+        <Text>Section 1</Text>
+        <Text>Section 2</Text>
+        <Text>Section 3</Text>
+        <Text>Section 4</Text>
+      </Section>
       <ActionRow>
         <Button
           style={ButtonStyle.Primary}
@@ -81,8 +100,7 @@ const command = createSlashCommand("ping", {
       .addTypedUserOption((option) =>
         option.setName("target").setDescription("Goat").setRequired(true),
       ),
-  loader: async (interaction) => {
-    console.log("Interaction", interaction.params)
+  loader: async () => {
     return {
       greeting: "Hello",
     }

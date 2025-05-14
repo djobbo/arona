@@ -16,3 +16,7 @@ export class AronaTextNode extends AronaNode {
     return this.#textContent
   }
 }
+
+export const isTextNode = (node?: AronaNode | null): node is AronaTextNode => {
+  return node?.type === "arona:__text"
+}
