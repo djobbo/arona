@@ -9,7 +9,7 @@ interface ActionRowProps {
 
 export const ActionRow = ACTION_ROW_ELEMENT as unknown as FC<ActionRowProps>
 
-export const isActionRow = (
+export const isActionRowComponent = (
   node?: AronaNode | null,
 ): node is AronaNode<ActionRowProps> => {
   return node?.type === ACTION_ROW_ELEMENT

@@ -34,23 +34,16 @@ const Component = (): JSX.Element => {
 
   return (
     <Container accentColor="Yellow">
-      <Button
-        style={ButtonStyle.Danger}
-        onClick={() => setCount((prev) => prev + 1)}
-      >
-        Increment
-      </Button>
       <Section
         accessory={
           <Button onClick={() => setCount((prev) => prev - 1)}>
-            Accessory
+            Decrement
           </Button>
         }
       >
-        <Text>Section 1</Text>
-        <Text>Section 2</Text>
-        <Text>Section 3</Text>
-        <Text>Section 4</Text>
+        <Text>## Section 1</Text>
+        <Text>### Section 2</Text>
+        <Text>~~Section 3~~</Text>
       </Section>
       <ActionRow>
         <Button

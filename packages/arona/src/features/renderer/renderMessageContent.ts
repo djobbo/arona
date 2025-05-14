@@ -13,7 +13,12 @@ import {
   TextInputStyle,
   resolveColor,
 } from "discord.js"
-import { type FileAttachment, isActionRow } from "./components"
+import {
+  type FileAttachment,
+  isActionRowComponent,
+  isContainerComponent,
+  isSectionAccessoryComponent,
+} from "./components"
 import { assertIsDefined } from "../../helpers/asserts"
 import { getFileFromAttachment } from "../../helpers/get-file-from-attachment"
 import { isRootNode } from "./nodes/root"
@@ -252,12 +257,36 @@ const renderNode = (
       }
     }
     case "arona:section": {
-      const content = renderNodes(node.children)
-      const accessory = renderNodes(node.props.accessory)
+      const contentNodes = node.children.filter(
+        (child) => child.type !== "arona:section-accessory",
+      )
+      const accessoryNodes = node.children.filter(
+        (child) => child.type === "arona:section-accessory",
+      )
+
+      if (accessoryNodes.length > 1) {
+        throw new Error(
+          `Only one accessory is allowed in a section, found ${accessoryNodes.length}`,
+        )
+      }
+
+      const content = renderNodes(contentNodes)
+      const accessory = renderNodes(accessoryNodes)
+
+      console.log("Accessory", accessory)
+      console.log("Content", content)
+
+      const isEmptySection = content.components.length === 0
 
       const section = new SectionBuilder({
-        components: content.components,
-        accessory: accessory.components,
+        components: isEmptySection
+          ? [
+              new TextDisplayBuilder({
+                content: EMPTY_STRING,
+              }),
+            ]
+          : content.components,
+        accessory: accessory.components[0],
       })
       return {
         components: [section],
@@ -268,10 +297,29 @@ const renderNode = (
         ],
       }
     }
+    case "arona:section-accessory": {
+      const content = renderNodes(node.children)
+      return {
+        components: content.components,
+        files: content.files,
+        interactionListeners: content.interactionListeners,
+      }
+    }
+    case "arona:action-row": {
+      const content = renderNodes(node.children)
+      const actionRow = new ActionRowBuilder({
+        components: content.components,
+      })
+
+      return {
+        components: [actionRow],
+        files: content.files,
+        interactionListeners: content.interactionListeners,
+      }
+    }
     case "arona:button": {
-      console.log("Button", node.props, node.children)
       const { button, customId, listener } = renderActionRowButton(node)
-      if (isRootNode(node.parent)) {
+      if (isRootNode(node.parent) || isContainerComponent(node.parent)) {
         const actionRow =
           new ActionRowBuilder<MessageActionRowComponentBuilder>()
         actionRow.addComponents(button)
@@ -282,7 +330,10 @@ const renderNode = (
         }
       }
 
-      if (isActionRow(node.parent)) {
+      if (
+        isActionRowComponent(node.parent) ||
+        isSectionAccessoryComponent(node.parent)
+      ) {
         return {
           components: [button],
           files: [],
@@ -297,7 +348,7 @@ const renderNode = (
     case "arona:link-button": {
       const linkButton = renderActionRowLink(node)
 
-      if (isRootNode(node.parent)) {
+      if (isRootNode(node.parent) || isContainerComponent(node.parent)) {
         const actionRow =
           new ActionRowBuilder<MessageActionRowComponentBuilder>()
         actionRow.addComponents(linkButton)
@@ -308,7 +359,7 @@ const renderNode = (
         }
       }
 
-      if (isActionRow(node.parent)) {
+      if (isActionRowComponent(node.parent)) {
         return {
           components: [linkButton],
           files: [],
@@ -341,6 +392,8 @@ const renderNode = (
       const text = new TextDisplayBuilder({
         content: textContent,
       })
+
+      console.log("Text", text.data)
 
       return {
         components: [text],
