@@ -1,13 +1,21 @@
-import type { AronaProps } from "./types"
-import type {
-  ButtonInteraction,
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  type ButtonInteraction,
   ButtonStyle,
-  InteractionButtonComponentData,
+  type Interaction,
+  type InteractionButtonComponentData,
+  type MessageActionRowComponentBuilder,
 } from "discord.js"
-import type { FC, PropsWithChildren } from "react"
+import { defineComponent } from "../helpers/define-component"
+import { isActionRowComponent } from "./action-row"
+import { isContainerComponent } from "./container"
+import { isRootNode } from "../nodes/root"
+import { isSectionAccessoryComponent } from "./section"
+import { renderInnerText } from "../helpers/render-inner-text"
+import type { ReactNode } from "react"
 
-interface ButtonProps
-  extends Partial<AronaProps<InteractionButtonComponentData>> {
+interface ButtonProps extends Partial<InteractionButtonComponentData> {
   /**
    * @deprecated Custom IDs are not recommended unless you know what you're doing.
    * They are used to identify the button in each interaction.
@@ -30,8 +38,57 @@ interface ButtonProps
    */
   onClick?: (interaction: ButtonInteraction) => unknown | Promise<unknown>
   style?: Exclude<InteractionButtonComponentData["style"], ButtonStyle.Link>
+  children?: ReactNode
 }
 
-export const Button = "arona:button" as unknown as FC<
-  PropsWithChildren<ButtonProps>
->
+export const {
+  name: BUTTON_ELEMENT,
+  component: Button,
+  guard: isButtonComponent,
+  render: renderButtonComponent,
+} = defineComponent<ButtonProps>("arona:button", (node) => {
+  const customId = node.props.customId ?? node.uuid
+
+  const button = new ButtonBuilder({
+    customId,
+    disabled: node.props.disabled ?? false,
+    style: node.props.style ?? ButtonStyle.Secondary,
+    label: renderInnerText(node),
+  })
+
+  const listener = async (interaction: Interaction) => {
+    if (!interaction.isButton()) return
+    if (interaction.customId !== customId) return
+
+    if (!(await node.props.onClick?.(interaction))) {
+      await interaction.deferUpdate()
+    }
+  }
+
+  const interactionListeners = [[customId, listener]]
+
+  if (isRootNode(node.parent) || isContainerComponent(node.parent)) {
+    const actionRow = new ActionRowBuilder<MessageActionRowComponentBuilder>()
+    actionRow.addComponents(button)
+    return {
+      components: [actionRow],
+      files: [],
+      interactionListeners,
+    }
+  }
+
+  if (
+    isActionRowComponent(node.parent) ||
+    isSectionAccessoryComponent(node.parent)
+  ) {
+    return {
+      components: [button],
+      files: [],
+      interactionListeners,
+    }
+  }
+
+  throw new Error(
+    `Unexpected element type: ${node.type} inside ${node.parent?.type}`,
+  )
+})

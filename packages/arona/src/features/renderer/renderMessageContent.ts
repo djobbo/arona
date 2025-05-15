@@ -1,81 +1,24 @@
 import {
   ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  ContainerBuilder,
   ModalBuilder,
-  SectionBuilder,
-  SeparatorBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
-  TextDisplayBuilder,
   TextInputBuilder,
   TextInputStyle,
-  resolveColor,
 } from "discord.js"
-import {
-  type FileAttachment,
-  isActionRowComponent,
-  isContainerComponent,
-  isSectionAccessoryComponent,
-} from "./components"
+import { EMPTY_STRING } from "../../constants"
+import { type FileAttachment } from "./components"
 import { assertIsDefined } from "../../helpers/asserts"
-import { getFileFromAttachment } from "../../helpers/get-file-from-attachment"
-import { isRootNode } from "./nodes/root"
-import { isTextNode } from "./nodes/text"
+import { renderInnerText } from "./helpers/render-inner-text"
+import { renderNodes } from "./helpers/render-nodes"
+import type { AronaNode } from "./nodes/node"
 import type {
-  APIMessageComponent,
-  Interaction,
-  JSONEncodable,
-  MessageActionRowComponentBuilder,
-} from "discord.js"
-import type {
-  ActionRowElements,
   FileAttachmentElements,
   ModalElements,
   SelectMenuElements,
   // TextElements, // TODO: [NEXT] TextElements
 } from "../jsx"
-import type { AronaNode } from "./nodes/node"
-
-const EMPTY_STRING = "​"
-
-export const renderInnerText = (
-  node: AronaNode,
-  textElementsOnly?: boolean,
-): string => {
-  if (isTextNode(node)) {
-    return node.innerText
-  }
-
-  const innerText = node.children
-    .map((child) => renderInnerText(child, true))
-    .join("")
-
-  if (!innerText) return ""
-
-  switch (node.type) {
-    case "arona:__text":
-      return innerText
-    case "reaccord:text-br":
-      return "\n"
-    case "reaccord:text-code":
-      return `\`${innerText}\``
-    case "reaccord:text-codeblock":
-      return `\`\`\`${node.props.lang ?? ""}\n${innerText}\n\`\`\``
-    case "reaccord:text-span":
-      let str = innerText
-      if (node.props.italic) str = `_${str}_`
-      if (node.props.bold) str = `**${str}**`
-      return str
-    case "reaccord:text-link":
-      return `[${innerText}](${node.props.href})`
-    default:
-      if (textElementsOnly)
-        throw new Error(`Unexpected element type: ${node.type} inside Text`)
-      return innerText
-  }
-}
+import type { Interaction, MessageActionRowComponentBuilder } from "discord.js"
 
 export const renderFileAttachment = (
   node: AronaNode<FileAttachmentElements["file"]>,
@@ -92,73 +35,6 @@ export const renderFileAttachment = (
   }
 
   return null
-}
-
-export const renderActionRowButton = (
-  node: AronaNode<ActionRowElements["button"]>,
-) => {
-  console.log("Button render", node.type)
-  const customId = node.props.customId ?? node.uuid
-
-  const button = new ButtonBuilder({
-    customId,
-    disabled: node.props.disabled ?? false,
-    style: node.props.style ?? ButtonStyle.Secondary,
-    label: renderInnerText(node),
-  })
-
-  const listener = async (interaction: Interaction) => {
-    if (!interaction.isButton()) return
-    if (interaction.customId !== customId) return
-
-    if (!(await node.props.onClick?.(interaction))) {
-      await interaction.deferUpdate()
-    }
-  }
-
-  return { button, customId, listener }
-}
-
-export const renderActionRowLink = (
-  node: AronaNode<ActionRowElements["link"]>,
-) => {
-  return new ButtonBuilder({
-    disabled: node.props.disabled ?? false,
-    label: renderInnerText(node),
-    style: ButtonStyle.Link,
-    url: node.props.url,
-  })
-}
-
-export const renderActionRowRoot = (
-  node: AronaNode<ActionRowElements["root"]>,
-) => {
-  const actionRow = new ActionRowBuilder<MessageActionRowComponentBuilder>()
-
-  const interactionListeners = new Map<
-    string,
-    (interaction: Interaction) => unknown
-  >()
-
-  node.children.forEach((child) => {
-    switch (child.type) {
-      case "arona:button":
-        const { button, customId, listener } = renderActionRowButton(child)
-        actionRow.addComponents(button)
-        interactionListeners.set(customId, listener)
-        return
-      case "arona:link-button":
-        const linkButton = renderActionRowLink(child)
-        actionRow.addComponents(linkButton)
-        return
-      default:
-        throw new Error(
-          `Unexpected element type: ${child.type} inside ActionRow`,
-        )
-    }
-  })
-
-  return { actionRow, interactionListeners }
 }
 
 export const renderSelectMenuOption = (
@@ -215,223 +91,6 @@ export const renderSelectMenuRoot = (
   actionRow.addComponents(selectMenu)
 
   return { actionRow, customId, listener }
-}
-
-const renderSeparator = (node: AronaNode): SeparatorBuilder => {
-  return new SeparatorBuilder({
-    divider: node.props.divider,
-    spacing: node.props.spacing,
-  })
-}
-
-const renderNode = (
-  node?: AronaNode | null,
-): {
-  components: JSONEncodable<APIMessageComponent>[]
-  files: FileAttachment[]
-  interactionListeners: [string, (interaction: Interaction) => unknown][]
-} => {
-  if (!node) {
-    return {
-      components: [],
-      files: [],
-      interactionListeners: [],
-    }
-  }
-
-  switch (node.type) {
-    case "arona:container": {
-      const content = renderNodes(node.children)
-      const container = new ContainerBuilder({
-        components: content.components,
-        accent_color: node.props.accentColor
-          ? resolveColor(node.props.accentColor)
-          : undefined,
-        spoiler: node.props.spoiler,
-      })
-
-      return {
-        components: [container],
-        files: content.files,
-        interactionListeners: content.interactionListeners,
-      }
-    }
-    case "arona:section": {
-      const contentNodes = node.children.filter(
-        (child) => child.type !== "arona:section-accessory",
-      )
-      const accessoryNodes = node.children.filter(
-        (child) => child.type === "arona:section-accessory",
-      )
-
-      if (accessoryNodes.length > 1) {
-        throw new Error(
-          `Only one accessory is allowed in a section, found ${accessoryNodes.length}`,
-        )
-      }
-
-      const content = renderNodes(contentNodes)
-      const accessory = renderNodes(accessoryNodes)
-
-      console.log("Accessory", accessory)
-      console.log("Content", content)
-
-      const isEmptySection = content.components.length === 0
-
-      const section = new SectionBuilder({
-        components: isEmptySection
-          ? [
-              new TextDisplayBuilder({
-                content: EMPTY_STRING,
-              }),
-            ]
-          : content.components,
-        accessory: accessory.components[0],
-      })
-      return {
-        components: [section],
-        files: [...content.files, ...accessory.files],
-        interactionListeners: [
-          ...content.interactionListeners,
-          ...accessory.interactionListeners,
-        ],
-      }
-    }
-    case "arona:section-accessory": {
-      const content = renderNodes(node.children)
-      return {
-        components: content.components,
-        files: content.files,
-        interactionListeners: content.interactionListeners,
-      }
-    }
-    case "arona:action-row": {
-      const content = renderNodes(node.children)
-      const actionRow = new ActionRowBuilder({
-        components: content.components,
-      })
-
-      return {
-        components: [actionRow],
-        files: content.files,
-        interactionListeners: content.interactionListeners,
-      }
-    }
-    case "arona:button": {
-      const { button, customId, listener } = renderActionRowButton(node)
-      if (isRootNode(node.parent) || isContainerComponent(node.parent)) {
-        const actionRow =
-          new ActionRowBuilder<MessageActionRowComponentBuilder>()
-        actionRow.addComponents(button)
-        return {
-          components: [actionRow],
-          files: [],
-          interactionListeners: [[customId, listener]],
-        }
-      }
-
-      if (
-        isActionRowComponent(node.parent) ||
-        isSectionAccessoryComponent(node.parent)
-      ) {
-        return {
-          components: [button],
-          files: [],
-          interactionListeners: [[customId, listener]],
-        }
-      }
-
-      throw new Error(
-        `Unexpected element type: ${node.type} inside ${node.parent?.type}`,
-      )
-    }
-    case "arona:link-button": {
-      const linkButton = renderActionRowLink(node)
-
-      if (isRootNode(node.parent) || isContainerComponent(node.parent)) {
-        const actionRow =
-          new ActionRowBuilder<MessageActionRowComponentBuilder>()
-        actionRow.addComponents(linkButton)
-        return {
-          components: [actionRow],
-          files: [],
-          interactionListeners: [],
-        }
-      }
-
-      if (isActionRowComponent(node.parent)) {
-        return {
-          components: [linkButton],
-          files: [],
-          interactionListeners: [],
-        }
-      }
-
-      throw new Error(
-        `Unexpected element type: ${node.type} inside ${node.parent?.type}`,
-      )
-    }
-    case "arona:separator": {
-      const separator = renderSeparator(node)
-      return {
-        components: [separator],
-        files: [],
-        interactionListeners: [],
-      }
-    }
-    case "arona:text-root": {
-      const textContent = renderInnerText(node)
-      if (textContent.length < 1) {
-        return {
-          components: [],
-          files: [],
-          interactionListeners: [],
-        }
-      }
-
-      const text = new TextDisplayBuilder({
-        content: textContent,
-      })
-
-      console.log("Text", text.data)
-
-      return {
-        components: [text],
-        files: [],
-        interactionListeners: [],
-      }
-    }
-    default:
-      throw new Error(
-        `Unhandled element type: ${node.type} inside ${node.parent?.type}`,
-      )
-  }
-}
-
-const renderNodes = (
-  nodes: AronaNode | AronaNode[],
-): {
-  components: JSONEncodable<APIMessageComponent>[]
-  files: FileAttachment[]
-  interactionListeners: [string, (interaction: Interaction) => unknown][]
-} => {
-  const components: JSONEncodable<APIMessageComponent>[] = []
-  const files: FileAttachment[] = []
-  const interactionListeners: [
-    string,
-    (interaction: Interaction) => unknown,
-  ][] = []
-
-  const nodesToRender = Array.isArray(nodes) ? nodes : [nodes]
-
-  nodesToRender.forEach((node) => {
-    const content = renderNode(node)
-
-    components.push(...(content.components ?? []))
-    files.push(...(content.files ?? []))
-    interactionListeners.push(...(content.interactionListeners ?? []))
-  })
-  return { components, files, interactionListeners }
 }
 
 export const renderMessageContent = (root: AronaNode) => {

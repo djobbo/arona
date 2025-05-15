@@ -1,7 +1,20 @@
-import type { APISeparatorComponent } from "discord.js"
-import type { AronaProps } from "./types"
-import type { FC } from "react"
+import { type APISeparatorComponent, SeparatorBuilder } from "discord.js"
+import { defineComponent } from "../helpers/define-component"
 
-export const Separator = "arona:separator" as unknown as FC<
-  AronaProps<APISeparatorComponent>
->
+export const {
+  name: SEPARATOR_ELEMENT,
+  component: Separator,
+  render: renderSeparatorComponent,
+  guard: isSeparatorComponent,
+} = defineComponent<APISeparatorComponent>("arona:separator", (node) => {
+  const separator = new SeparatorBuilder({
+    divider: node.props.divider,
+    spacing: node.props.spacing,
+  })
+
+  return {
+    components: [separator],
+    files: [],
+    interactionListeners: [],
+  }
+})

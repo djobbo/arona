@@ -1,16 +1,26 @@
-import type { AronaNode } from "../nodes/node"
-import type { FC, ReactNode } from "react"
-
-const ACTION_ROW_ELEMENT = "arona:action-row"
+import { ActionRowBuilder } from "discord.js"
+import { defineComponent } from "../helpers/define-component"
+import { renderNodes } from "../helpers/render-nodes"
+import type { ReactNode } from "react"
 
 interface ActionRowProps {
   children?: ReactNode
 }
 
-export const ActionRow = ACTION_ROW_ELEMENT as unknown as FC<ActionRowProps>
+export const {
+  name: ACTION_ROW_ELEMENT,
+  component: ActionRow,
+  guard: isActionRowComponent,
+  render: renderActionRowComponent,
+} = defineComponent<ActionRowProps>("arona:action-row", (node) => {
+  const content = renderNodes(node.children)
+  const actionRow = new ActionRowBuilder({
+    components: content.components,
+  })
 
-export const isActionRowComponent = (
-  node?: AronaNode | null,
-): node is AronaNode<ActionRowProps> => {
-  return node?.type === ACTION_ROW_ELEMENT
-}
+  return {
+    components: [actionRow],
+    files: content.files,
+    interactionListeners: content.interactionListeners,
+  }
+})

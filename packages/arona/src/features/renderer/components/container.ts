@@ -1,21 +1,37 @@
-import type { APIContainerComponent, ColorResolvable } from "discord.js"
-import type { AronaNode } from "../nodes/node"
-import type { AronaProps } from "./types"
-import type { FC, PropsWithChildren } from "react"
+import {
+  type APIContainerComponent,
+  type ColorResolvable,
+  ContainerBuilder,
+  resolveColor,
+} from "discord.js"
+import { defineComponent } from "../helpers/define-component"
+import { renderNodes } from "../helpers/render-nodes"
+import type { ReactNode } from "react"
 
 interface ContainerProps
-  extends AronaProps<
-    Omit<APIContainerComponent, "accent_color" | "components">
-  > {
+  extends Omit<APIContainerComponent, "accent_color" | "components"> {
   accentColor?: ColorResolvable
+  children?: ReactNode
 }
 
-export const Container = "arona:container" as unknown as FC<
-  PropsWithChildren<ContainerProps>
->
+export const {
+  name: CONTAINER_ELEMENT,
+  component: Container,
+  guard: isContainerComponent,
+  render: renderContainerComponent,
+} = defineComponent<ContainerProps>("arona:container", (node) => {
+  const content = renderNodes(node.children)
+  const container = new ContainerBuilder({
+    components: content.components,
+    accent_color: node.props.accentColor
+      ? resolveColor(node.props.accentColor)
+      : undefined,
+    spoiler: node.props.spoiler,
+  })
 
-export const isContainerComponent = (
-  node?: AronaNode | null,
-): node is AronaNode<ContainerProps> => {
-  return node?.type === "arona:container"
-}
+  return {
+    components: [container],
+    files: content.files,
+    interactionListeners: content.interactionListeners,
+  }
+})

@@ -32,9 +32,6 @@ const createModal = (Code: () => JSX.Element, rootNode: RootNode) => {
   return modalRoot
 }
 
-// If used directly inside button (<button onClick={openModal(Modal)}/>),
-// will prevent the app from defering update, because opening a modal is
-// already an interaction response.
 const openModal =
   (rootNode: RootNode) =>
   <
@@ -59,5 +56,25 @@ const openModal =
 export const useModal = () => {
   const rootNode = useRootNodeContextInternal()
 
-  return { openModal: openModal(rootNode) }
+  return {
+    // If used directly inside button (<button onClick={openModal(Modal)}/>),
+    // will prevent the app from defering update, because opening a modal is
+    // already an interaction response.
+    /**
+     * If used directly inside button (<button onClick={openModal(Modal)}/>)
+     * will prevent the app from defering update, because opening a modal is
+     * already an interaction response.
+     * @param Code - The modal component to render.
+     * @returns A function that takes an interaction and opens the modal.
+     * @example
+     * ```tsx
+     * const { openModal } = useModal()
+     * const handleClick = () => {
+     *   openModal(() => <MyModal />)
+     * }
+     * return <Button onClick={handleClick}>Open Modal</Button>
+     * ```
+     */
+    openModal: openModal(rootNode),
+  }
 }

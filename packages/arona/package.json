@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "vite-node --watch src/index.tsx",
+    "dev": "vite-node --watch src/index.ts",
     "hk": "vite-node --watch src/hooks-test.tsx"
   },
   "devDependencies": {
@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^4.4.1",
     "discord.js": "^14.19.3",
     "react": "18.3.0",
     "react-reconciler": "0.28.0",

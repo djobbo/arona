@@ -7,21 +7,9 @@ import {
   Separator,
   Text,
 } from "./features/renderer/components"
-import { AronaClient } from "./features/discord-client/client"
-import { ButtonStyle, Events, GatewayIntentBits } from "discord.js"
+import { ButtonStyle } from "discord.js"
 import { createSlashCommand } from "./features/command/create-slash-command"
 import { useState } from "react"
-
-const client = new AronaClient({
-  token: process.env.DISCORD_APP_TOKEN!,
-  clientId: process.env.DISCORD_APP_ID!,
-  devGuildId: process.env.DISCORD_DEV_GUILD_ID,
-  intents: [GatewayIntentBits.Guilds],
-})
-
-client.once(Events.ClientReady, () => {
-  console.log(`🚀 Logged in as ${client.user?.tag}`)
-})
 
 const Component = (): JSX.Element => {
   const {
@@ -29,11 +17,11 @@ const Component = (): JSX.Element => {
     interaction: {
       params: { msg, target },
     },
-  } = command.useCommandContext()
+  } = testCommand.useCommandContext()
   const [count, setCount] = useState(0)
 
   return (
-    <Container accentColor="Yellow">
+    <Container accentColor="Orange">
       <Section
         accessory={
           <Button onClick={() => setCount((prev) => prev - 1)}>
@@ -80,7 +68,7 @@ const Component = (): JSX.Element => {
   )
 }
 
-const command = createSlashCommand("ping", {
+export const testCommand = createSlashCommand("ping", {
   command: (command) =>
     command
       .setDescription("Replies with Pong!")
@@ -100,16 +88,3 @@ const command = createSlashCommand("ping", {
   },
   component: Component,
 })
-
-client.addCommands([command])
-await client.login()
-
-if (import.meta.hot) {
-  import.meta.hot.accept(() => {
-    console.log("♻️ index.ts updated")
-  })
-
-  import.meta.hot.dispose(() => {
-    console.log("🧹 index.ts dispose")
-  })
-}
