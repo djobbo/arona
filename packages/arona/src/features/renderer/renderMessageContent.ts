@@ -1,21 +1,17 @@
 import {
   ActionRowBuilder,
   ModalBuilder,
-  StringSelectMenuBuilder,
-  StringSelectMenuOptionBuilder,
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js"
 import { EMPTY_STRING } from "../../constants"
 import { type FileAttachment } from "./components"
 import { assertIsDefined } from "../../helpers/asserts"
-import { renderInnerText } from "./helpers/render-inner-text"
 import { renderNodes } from "./helpers/render-nodes"
 import type { AronaNode } from "./nodes/node"
 import type {
   FileAttachmentElements,
   ModalElements,
-  SelectMenuElements,
   // TextElements, // TODO: [NEXT] TextElements
 } from "../jsx"
 import type { Interaction, MessageActionRowComponentBuilder } from "discord.js"
@@ -35,62 +31,6 @@ export const renderFileAttachment = (
   }
 
   return null
-}
-
-export const renderSelectMenuOption = (
-  node: AronaNode<SelectMenuElements["option"]>,
-) => {
-  assertIsDefined(node.props.value, "SelectMenu option must have a value")
-
-  return new StringSelectMenuOptionBuilder({
-    default: node.props.selected ?? false,
-    label: renderInnerText(node),
-    value: node.props.value,
-    description: node.props.description,
-    emoji: node.props.emoji,
-  })
-}
-
-export const renderSelectMenuRoot = (
-  node: AronaNode<SelectMenuElements["root"]>,
-) => {
-  const actionRow = new ActionRowBuilder<MessageActionRowComponentBuilder>()
-
-  const customId = node.props.customId ?? node.uuid
-
-  const { disabled, placeholder } = node.props
-
-  const selectMenu = new StringSelectMenuBuilder({
-    customId,
-    disabled: disabled ?? false,
-    placeholder,
-  })
-
-  const options = node.children.map((option) => {
-    if (option.type !== "reaccord:selectmenu-option") {
-      throw new Error(
-        `Unexpected element type: ${option.type} inside SelectMenu`,
-      )
-    }
-
-    return renderSelectMenuOption(option)
-  })
-
-  selectMenu.addOptions(options)
-
-  const listener = async (interaction: Interaction) => {
-    // TODO: other types of select menus
-    if (!interaction.isStringSelectMenu()) return
-    if (interaction.customId !== customId) return
-
-    if (!(await node.props.onChange?.(interaction.values, interaction))) {
-      await interaction.deferUpdate()
-    }
-  }
-
-  actionRow.addComponents(selectMenu)
-
-  return { actionRow, customId, listener }
 }
 
 export const renderMessageContent = (root: AronaNode) => {

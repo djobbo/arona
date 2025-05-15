@@ -59,13 +59,22 @@ export const {
   guard: isGalleryComponent,
 } = defineComponent<GalleryProps>("arona:gallery", (node) => {
   const items = node.children
+    // TODO: throw if there are invalid items
     .filter(isMediaComponent)
     .map((item) => renderMediaComponent(item).misc)
-    .filter((i) => !!i)
+    .filter((item) => !!item)
 
-  const gallery = new MediaGalleryBuilder({
-    items: items,
-  })
+  if (items.length === 0) {
+    console.warn(`Gallery ${node.uuid} has no items. It will not be rendered.`)
+
+    return {
+      components: [],
+      files: [],
+      interactionListeners: [],
+    }
+  }
+
+  const gallery = new MediaGalleryBuilder({ items })
 
   return {
     components: [gallery],

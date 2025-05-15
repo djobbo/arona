@@ -7,8 +7,9 @@ import {
   Separator,
   Text,
 } from "./features/renderer/components"
-import { ButtonStyle } from "discord.js"
+import { ButtonStyle, SeparatorSpacingSize } from "discord.js"
 import { Gallery, Media } from "./features/renderer/components/media-gallery"
+import { Option, Select } from "./features/renderer/components/select"
 import { createSlashCommand } from "./features/command/create-slash-command"
 import { useState } from "react"
 
@@ -21,6 +22,7 @@ const Component = (): JSX.Element => {
     },
   } = testCommand.useCommandContext()
   const [count, setCount] = useState(0)
+  const [selected, setSelected] = useState<string | undefined>(undefined)
 
   return (
     <Container accentColor="Orange">
@@ -66,6 +68,24 @@ const Component = (): JSX.Element => {
         </Button>
         <LinkButton url="https://google.com">Google</LinkButton>
       </ActionRow>
+      <Separator spacing={SeparatorSpacingSize.Large} />
+      <Text>**Select Menu** {!!selected && <>`{selected}`</>}</Text>
+      <Select onChange={([value]) => setSelected(value)}>
+        <Option
+          value="option1"
+          description="This is option 1"
+          selected={selected === "option1"}
+        >
+          Option 1
+        </Option>
+        <Option
+          value="option2"
+          description="This is option 2"
+          selected={selected === "option2"}
+        >
+          Option 2
+        </Option>
+      </Select>
       <Separator />
       <Text>
         # {loaderData.greeting} Sending `{msg}` to {`<@${target.id}>`}

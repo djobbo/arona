@@ -47,12 +47,20 @@ export const {
   guard: isButtonComponent,
   render: renderButtonComponent,
 } = defineComponent<ButtonProps>("arona:button", (node) => {
-  const customId = node.props.customId ?? node.uuid
+  const {
+    children: _children,
+    customId = node.uuid,
+    onClick,
+    disabled = false,
+    style = ButtonStyle.Secondary,
+    ...props
+  } = node.props
 
   const button = new ButtonBuilder({
     customId,
-    disabled: node.props.disabled ?? false,
-    style: node.props.style ?? ButtonStyle.Secondary,
+    disabled,
+    style,
+    ...props,
     label: renderInnerText(node),
   })
 
@@ -60,7 +68,7 @@ export const {
     if (!interaction.isButton()) return
     if (interaction.customId !== customId) return
 
-    if (!(await node.props.onClick?.(interaction))) {
+    if (!(await onClick?.(interaction))) {
       await interaction.deferUpdate()
     }
   }

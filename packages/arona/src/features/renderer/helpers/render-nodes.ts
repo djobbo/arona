@@ -22,6 +22,7 @@ import {
   renderGalleryComponent,
   renderMediaComponent,
 } from "../components/media-gallery"
+import { isSelectComponent, renderSelectComponent } from "../components/select"
 import type { AronaNode } from "../nodes/node"
 import type { RenderOutput } from "./define-component"
 
@@ -51,6 +52,8 @@ const renderNode = (node?: AronaNode | null): RenderOutput => {
       return renderSectionComponent(node)
     case isSectionAccessoryComponent(node):
       return renderSectionAccessoryComponent(node)
+    case isSelectComponent(node):
+      return renderSelectComponent(node)
     case isSeparatorComponent(node):
       return renderSeparatorComponent(node)
     case isTextComponent(node):
