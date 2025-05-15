@@ -7,13 +7,15 @@ import type { AronaNode } from "../nodes/node"
 import type { AronaProps, FileAttachment } from "../components"
 import type { FC } from "react"
 
-export const defineComponent = <Props>(
+export interface RenderOutput {
+  components: JSONEncodable<APIMessageComponent>[]
+  files: FileAttachment[]
+  interactionListeners: [string, (interaction: Interaction) => unknown][]
+}
+
+export const defineComponent = <Props, Misc extends unknown = never>(
   name: string,
-  render: (node: AronaNode<Props>) => {
-    components: JSONEncodable<APIMessageComponent>[]
-    files: FileAttachment[]
-    interactionListeners: [string, (interaction: Interaction) => unknown][]
-  },
+  render: (node: AronaNode<Props>) => RenderOutput & { misc?: Misc },
 ) => {
   return {
     name,

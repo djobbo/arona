@@ -8,6 +8,7 @@ import {
   Text,
 } from "./features/renderer/components"
 import { ButtonStyle } from "discord.js"
+import { Gallery, Media } from "./features/renderer/components/media-gallery"
 import { createSlashCommand } from "./features/command/create-slash-command"
 import { useState } from "react"
 
@@ -15,6 +16,7 @@ const Component = (): JSX.Element => {
   const {
     loaderData,
     interaction: {
+      user,
       params: { msg, target },
     },
   } = testCommand.useCommandContext()
@@ -22,6 +24,18 @@ const Component = (): JSX.Element => {
 
   return (
     <Container accentColor="Orange">
+      <Gallery>
+        <Media
+          media={{
+            url: target.displayAvatarURL({ size: 128 }),
+          }}
+        />
+        <Media
+          media={{
+            url: user.displayAvatarURL({ size: 128 }),
+          }}
+        />
+      </Gallery>
       <Section
         accessory={
           <Button onClick={() => setCount((prev) => prev - 1)}>
@@ -54,7 +68,7 @@ const Component = (): JSX.Element => {
       </ActionRow>
       <Separator />
       <Text>
-        # {loaderData.greeting} Sending {msg} to {`<@${target.id}>`}
+        # {loaderData.greeting} Sending `{msg}` to {`<@${target.id}>`}
       </Text>
       <Button
         style={ButtonStyle.Danger}

@@ -1,4 +1,3 @@
-import { TextDisplayBuilder } from "discord.js"
 import {
   isActionRowComponent,
   isButtonComponent,
@@ -17,21 +16,16 @@ import {
   renderSeparatorComponent,
   renderTextComponent,
 } from "../components"
-import type {
-  APIMessageComponent,
-  Interaction,
-  JSONEncodable,
-} from "discord.js"
+import {
+  isGalleryComponent,
+  isMediaComponent,
+  renderGalleryComponent,
+  renderMediaComponent,
+} from "../components/media-gallery"
 import type { AronaNode } from "../nodes/node"
-import type { FileAttachment } from "../components"
+import type { RenderOutput } from "./define-component"
 
-const renderNode = (
-  node?: AronaNode | null,
-): {
-  components: JSONEncodable<APIMessageComponent>[]
-  files: FileAttachment[]
-  interactionListeners: [string, (interaction: Interaction) => unknown][]
-} => {
+const renderNode = (node?: AronaNode | null): RenderOutput => {
   if (!node) {
     return {
       components: [],
@@ -49,6 +43,10 @@ const renderNode = (
       return renderContainerComponent(node)
     case isLinkButtonComponent(node):
       return renderLinkButtonComponent(node)
+    case isGalleryComponent(node):
+      return renderGalleryComponent(node)
+    case isMediaComponent(node):
+      return renderMediaComponent(node)
     case isSectionComponent(node):
       return renderSectionComponent(node)
     case isSectionAccessoryComponent(node):
@@ -64,28 +62,22 @@ const renderNode = (
   }
 }
 
-export const renderNodes = (
-  nodes: AronaNode | AronaNode[],
-): {
-  components: JSONEncodable<APIMessageComponent>[]
-  files: FileAttachment[]
-  interactionListeners: [string, (interaction: Interaction) => unknown][]
-} => {
-  const components: JSONEncodable<APIMessageComponent>[] = []
-  const files: FileAttachment[] = []
-  const interactionListeners: [
-    string,
-    (interaction: Interaction) => unknown,
-  ][] = []
+export const renderNodes = (nodes: AronaNode | AronaNode[]): RenderOutput => {
+  const output: RenderOutput = {
+    components: [],
+    files: [],
+    interactionListeners: [],
+  }
 
   const nodesToRender = Array.isArray(nodes) ? nodes : [nodes]
 
   nodesToRender.forEach((node) => {
     const content = renderNode(node)
 
-    components.push(...(content.components ?? []))
-    files.push(...(content.files ?? []))
-    interactionListeners.push(...(content.interactionListeners ?? []))
+    output.components.push(...(content.components ?? []))
+    output.files.push(...(content.files ?? []))
+    output.interactionListeners.push(...(content.interactionListeners ?? []))
   })
-  return { components, files, interactionListeners }
+
+  return output
 }
