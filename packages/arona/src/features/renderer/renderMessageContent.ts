@@ -33,6 +33,9 @@ export const renderFileAttachment = (
   return null
 }
 
+/**
+ * @deprecated TODO: REMOVE THIS
+ */
 export const renderMessageContent = (root: AronaNode) => {
   const { components, files, interactionListeners } = renderNodes(root.children)
   const isEmptyMessage = components.length === 0
@@ -68,69 +71,4 @@ export const renderModalInput = (node: AronaNode<ModalElements["input"]>) => {
   actionRow.addComponents(textInput)
 
   return { actionRow, name, onChange }
-}
-
-export const renderModalWrapper = (
-  node: AronaNode<ModalElements["wrapper"]>,
-) => {
-  const { title } = node.props
-
-  assertIsDefined(title, "Modal title is required")
-
-  const customId = node.props.customId ?? node.uuid
-
-  const modal = new ModalBuilder({
-    customId,
-    title,
-  })
-
-  const textInputs = node.children.map((child) => {
-    if (child.type !== "reaccord:modal-input") {
-      throw new Error(`Unexpected element type: ${child.type} inside Modal`)
-    }
-
-    return renderModalInput(child)
-  })
-
-  modal.addComponents(textInputs.map(({ actionRow }) => actionRow))
-
-  const listener = async (interaction: Interaction) => {
-    if (!interaction.isModalSubmit()) return
-    if (interaction.customId !== customId) return
-
-    let props = new Map<string, string>()
-
-    textInputs.map((input) => {
-      const customId = input.name
-      const value = interaction.fields.getTextInputValue(customId)
-      input.onChange?.(value, interaction)
-      props.set(input.name, value)
-    })
-
-    if (
-      !(await node.props.onSubmit?.(Object.fromEntries(props), interaction))
-    ) {
-      await interaction.deferUpdate()
-    }
-  }
-
-  return { modal, customId, listener }
-}
-
-export const renderModalRoot = (root: AronaNode) => {
-  if (root.type !== "reaccord:__modal-root")
-    throw new Error("Invalid modal root")
-
-  const modalNode = root.firstChild
-
-  if (
-    root.children.length !== 1 ||
-    !modalNode ||
-    modalNode.type !== "reaccord:modal-wrapper"
-  )
-    throw new Error(
-      "When creating a modal, make sure you wrap all the children inside a single <Modal> element",
-    )
-
-  return renderModalWrapper(modalNode)
 }

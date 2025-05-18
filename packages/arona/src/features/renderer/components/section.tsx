@@ -48,12 +48,6 @@ export const {
   guard: isSectionComponent,
   render: renderSectionComponent,
 } = defineComponent<SectionInternalProps>("arona:section", (node) => {
-  // const contentNodes = node.children.filter(
-  //   (child) => child.type !== "arona:section-accessory",
-  // )
-  // const accessoryNodes = node.children.filter(
-  //   (child) => child.type === "arona:section-accessory",
-  // )
   const contentNodes = node.children.filter(
     (child) => !isSectionAccessoryComponent(child),
   )

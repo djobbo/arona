@@ -7,8 +7,13 @@ import {
   Separator,
   Text,
 } from "./features/renderer/components"
-import { ButtonStyle, SeparatorSpacingSize } from "discord.js"
+import { ButtonStyle, SeparatorSpacingSize, TextInputStyle } from "discord.js"
 import { Gallery, Media } from "./features/renderer/components/media-gallery"
+import {
+  Modal,
+  TextInput,
+  useModal,
+} from "./features/renderer/components/modal"
 import { Option, Select } from "./features/renderer/components/select"
 import { createSlashCommand } from "./features/command/create-slash-command"
 import { useState } from "react"
@@ -23,6 +28,9 @@ const Component = (): JSX.Element => {
   } = testCommand.useCommandContext()
   const [count, setCount] = useState(0)
   const [selected, setSelected] = useState<string | undefined>(undefined)
+  const [text, setText] = useState("")
+
+  const { openModal } = useModal()
 
   return (
     <Container accentColor="Orange">
@@ -47,16 +55,27 @@ const Component = (): JSX.Element => {
       >
         <Text>## Section 1</Text>
         <Text>### Section 2</Text>
-        <Text>~~Section 3~~</Text>
+        {text && <Text>~~{text}~~</Text>}
       </Section>
       <ActionRow>
         <Button
           style={ButtonStyle.Primary}
-          onClick={() => {
-            console.log("Clicked")
-          }}
+          onClick={openModal(() => (
+            <Modal
+              title="hello"
+              onSubmit={(props) => console.log("Submitted", props)}
+            >
+              <TextInput
+                style={TextInputStyle.Short}
+                label="hello my friends"
+                name="test"
+                onChange={(value) => setText(value)}
+                value={text}
+              />
+            </Modal>
+          ))}
         >
-          Click me
+          Open Modal
         </Button>
         <Button
           style={ButtonStyle.Secondary}

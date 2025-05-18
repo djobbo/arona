@@ -7,6 +7,11 @@ import {
 } from "discord.js"
 import { ConcurrentRoot } from "react-reconciler/constants"
 import { MessageProvider } from "../message-provider"
+import {
+  type ModalComponent,
+  type ModalInteractionRef,
+  renderModalComponent,
+} from "../components/modal"
 import { debounce } from "../../../helpers/debounce"
 import { renderMessageContent } from "../renderMessageContent"
 import type { AronaClient } from "../../discord-client/client"
@@ -27,18 +32,20 @@ export class AronaRootNode extends AronaNode {
     unknown
   >
   #rootContainer: FiberRoot
+  #modalContainer: FiberRoot | null = null
   discordClient: AronaClient
   interactionRef: InteractionRef | null = null
   message: Message | null = null
   waitForMessageCreation: Promise<Message> | null = null
   hydrationHooks: ((message: Message) => void)[] = []
-  #interactionListeners: Map<
+  #interactionListeners = new Map<
     string,
     (interaction: Interaction) => unknown
-  > | null = null
-  modalInteractionListener: ((interaction: Interaction) => unknown) | null =
+  >()
+  #modalInteractionListener: ((interaction: Interaction) => unknown) | null =
     null
   #unmountTimeout: Timer | null = null
+  #modalRoot: AronaNode | null = null
 
   unmounted = false
   //TODO: [NEXT] move this
@@ -83,21 +90,26 @@ export class AronaRootNode extends AronaNode {
     console.log("Unmounting root")
     this.unmounted = true
     this.#unmountTimeout && clearTimeout(this.#unmountTimeout)
-    this.#interactionListeners?.clear()
+    this.#interactionListeners.clear()
     this.discordClient.removeInteractionListener(this.uuid)
-    this.reconcilerInstance.updateContainer(null, this.#rootContainer, null)
+    this.reconcilerInstance.updateContainer(null, this.#rootContainer)
+    this.#modalInteractionListener = null
+    if (this.#modalContainer) {
+      this.reconcilerInstance.updateContainer(null, this.#modalContainer)
+    }
   }
 
   interactionListener(interaction: Interaction) {
     if (this.unmounted || !this.message) return
     if (!("customId" in interaction)) return
 
-    const listener = this.#interactionListeners?.get(interaction.customId)
+    const listener = this.#interactionListeners.get(interaction.customId)
     listener?.(interaction)
 
-    this.modalInteractionListener?.(interaction)
+    this.#modalInteractionListener?.(interaction)
   }
 
+  // TODO: verify if this is still needed
   addHydrationHook(fn: (message: Message) => void) {
     this.hydrationHooks.push(fn)
 
@@ -118,7 +130,6 @@ export class AronaRootNode extends AronaNode {
         <Code />
       </MessageProvider>,
       this.#rootContainer,
-      null,
     )
 
     await this.render()
@@ -129,6 +140,7 @@ export class AronaRootNode extends AronaNode {
     if (!this.interactionRef) throw new Error("No interaction ref")
 
     const { messageContent, interactionListeners } = renderMessageContent(this)
+    // Reset all listeners, including modal ones
     this.#interactionListeners = interactionListeners
 
     if (!this.message) {
@@ -193,6 +205,42 @@ export class AronaRootNode extends AronaNode {
 
     return this.message
   }, MESSAGE_UPDATE_DEBOUNCE_MS)
+
+  async renderModal(Code: ModalComponent, interaction: ModalInteractionRef) {
+    this.#modalRoot ??= new AronaNode("arona:__modal-root", {}, this)
+    this.#modalContainer ??= this.reconcilerInstance.createContainer(
+      this.#modalRoot,
+      ConcurrentRoot,
+      null,
+      false,
+      false,
+      "",
+      (error) => {
+        // console.trace("Error in modal", error)
+      },
+      null,
+    )
+
+    this.reconcilerInstance.updateContainer(
+      <Code interaction={interaction} />,
+      this.#modalContainer,
+      null,
+      () => {
+        if (!this.#modalRoot) return
+
+        console.log(this.#modalRoot.children)
+
+        const modal = renderModalComponent(this.#modalRoot.children[0])
+
+        // TODO: clean this up
+        this.#modalInteractionListener =
+          modal.interactionListeners?.[0]?.[1] ?? null
+
+        // TODO: Await??
+        interaction.showModal(modal.components[0])
+      },
+    )
+  }
 }
 
 export const isRootNode = (node?: AronaNode | null): node is AronaRootNode => {

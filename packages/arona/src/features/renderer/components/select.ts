@@ -13,6 +13,7 @@ import { defineComponent } from "../helpers/define-component"
 import { isActionRowComponent } from "./action-row"
 import { isContainerComponent } from "./container"
 import { isRootNode } from "../nodes/root"
+import { renderInnerText } from "../helpers/render-inner-text"
 import type { ReactNode } from "react"
 
 interface SelectProps
@@ -132,9 +133,14 @@ export const {
 } = defineComponent<SelectOptionProps, APISelectMenuOption>(
   "arona:select-menu-option",
   (node) => {
-    //   assertIsDefined(node.props.value, "SelectMenu option must have a value")
+    const {
+      children: _children,
+      value,
+      selected = false,
+      ...props
+    } = node.props
 
-    if (!node.props.value) {
+    if (!value) {
       return {
         components: [],
         files: [],
@@ -143,11 +149,10 @@ export const {
     }
 
     const option = new StringSelectMenuOptionBuilder({
-      default: node.props.selected ?? false,
-      label: node.props.label ?? node.props.value,
-      value: node.props.value,
-      description: node.props.description,
-      emoji: node.props.emoji,
+      default: selected,
+      label: renderInnerText(node) ?? node.props.value,
+      value,
+      ...props,
     }).toJSON()
 
     return {

@@ -21,7 +21,7 @@ interface ButtonProps extends Partial<InteractionButtonComponentData> {
    * They are used to identify the button in each interaction.
    * If set manually, it should be unique per button, and per interaction.
    */
-  customId?: string
+  customId?: InteractionButtonComponentData["customId"]
   /**
    * By default, onClick will trigger a defered update automatically.
    * If you want to handle the update manually, return a truthy value.

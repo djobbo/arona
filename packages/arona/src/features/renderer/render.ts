@@ -1,6 +1,5 @@
 import { AronaRootNode } from "./nodes/root"
 import { hostConfig } from "./hostConfig"
-import React from "react"
 import createReconciler from "react-reconciler"
 import type {
   ChatInputCommandInteraction,

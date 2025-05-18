@@ -1,34 +1,27 @@
-import React, { createContext, useContext, useEffect, useReducer } from "react"
-import type { AronaClient } from "../discord-client/client"
+import { createContext, useContext } from "react"
 import type { AronaRootNode } from "./nodes/root"
-import type { Message } from "discord.js"
 
-const rootNodeContextInternal = createContext<AronaRootNode | null>(null)
+const messageContext = createContext<AronaRootNode | null>(null)
 
-export const useMessageInternal = () => {
-  const [, forceUpdate] = useReducer(() => ({}), {})
-  const rootNode = useContext(rootNodeContextInternal)
+export const useMessageInternal_DO_NOT_USE_OR_YOU_WILL_BE_BANNED_FROM_THE_PARTY =
+  () => {
+    const rootNode = useContext(messageContext)
 
-  if (!rootNode) {
-    throw new Error("useMessageCtx must be used inside a MessageProvider")
+    if (!rootNode) {
+      throw new Error(
+        "useMessageInternal must be used inside a MessageProvider",
+      )
+    }
+
+    return rootNode
   }
 
-  useEffect(() => rootNode.addHydrationHook(() => forceUpdate()), [])
+export const useMessage = () => {
+  const rootNode = useContext(messageContext)
 
-  return rootNode
-}
-
-export type MessageContext = {
-  client: AronaClient
-  /**
-   * Message will be `null` on the initial render.
-   */
-  message: Message | null
-  unmount: () => void
-}
-
-export const useMessage = (): MessageContext => {
-  const rootNode = useMessageInternal()
+  if (!rootNode) {
+    throw new Error("useMessage must be used inside a MessageProvider")
+  }
 
   return {
     client: rootNode.discordClient,
@@ -46,14 +39,9 @@ export const MessageProvider = ({
   rootNode,
   children,
 }: MessageProviderProps) => {
-  // console.log(
-  //   "MessageProvider",
-  //   React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
-  // )
-
   return (
-    <rootNodeContextInternal.Provider value={rootNode}>
+    <messageContext.Provider value={rootNode}>
       {children}
-    </rootNodeContextInternal.Provider>
+    </messageContext.Provider>
   )
 }
