@@ -100,7 +100,6 @@ export const {
   guard: isModalComponent,
   render: renderModalComponent,
 } = defineComponent<ModalProps>("arona:modal", (node) => {
-  console.log("Rendering modal", node)
   const textInputs = node.children
     .filter(isTextInputComponent)
     .map(renderTextInputComponent)
@@ -112,11 +111,6 @@ export const {
     ...props
   } = node.props
 
-  console.log("Modal props", {
-    customId,
-    ...props,
-    components: textInputs.map((input) => input.components).flat(),
-  })
   const modal = new ModalBuilder({
     customId,
     ...props,
@@ -125,12 +119,6 @@ export const {
 
   const listener = async (interaction: Interaction) => {
     if (!interaction.isModalSubmit()) return
-    console.log(
-      "Modal interaction",
-      interaction.customId,
-      customId,
-      interaction.customId === customId,
-    )
     if (interaction.customId !== customId) return
 
     let props = new Map<string, string>()

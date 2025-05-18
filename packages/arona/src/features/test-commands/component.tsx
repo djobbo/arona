@@ -2,23 +2,22 @@ import {
   ActionRow,
   Button,
   Container,
+  Gallery,
   LinkButton,
+  Media,
+  Option,
   Section,
+  Select,
   Separator,
   Text,
-} from "./features/renderer/components"
-import { ButtonStyle, SeparatorSpacingSize, TextInputStyle } from "discord.js"
-import { Gallery, Media } from "./features/renderer/components/media-gallery"
-import {
-  Modal,
-  TextInput,
-  useModal,
-} from "./features/renderer/components/modal"
-import { Option, Select } from "./features/renderer/components/select"
-import { createSlashCommand } from "./features/command/create-slash-command"
+} from "../renderer/components"
+import { ButtonStyle, SeparatorSpacingSize } from "discord.js"
+import { MyModal } from "./modal"
+import { testCommand } from "./test-command"
+import { useModal } from "../renderer/components/modal"
 import { useState } from "react"
 
-const Component = (): JSX.Element => {
+export const Component = (): JSX.Element => {
   const {
     loaderData,
     interaction: {
@@ -48,8 +47,11 @@ const Component = (): JSX.Element => {
       </Gallery>
       <Section
         accessory={
-          <Button onClick={() => setCount((prev) => prev - 1)}>
-            Decrement
+          <Button
+            onClick={() => setCount((prev) => prev - 1)}
+            style={ButtonStyle.Danger}
+          >
+            Decrementasdasdsadsadsa
           </Button>
         }
       >
@@ -61,18 +63,7 @@ const Component = (): JSX.Element => {
         <Button
           style={ButtonStyle.Primary}
           onClick={openModal(() => (
-            <Modal
-              title="hello"
-              onSubmit={(props) => console.log("Submitted", props)}
-            >
-              <TextInput
-                style={TextInputStyle.Short}
-                label="hello my friends"
-                name="test"
-                onChange={(value) => setText(value)}
-                value={text}
-              />
-            </Modal>
+            <MyModal text={text} setText={setText} />
           ))}
         >
           Open Modal
@@ -113,31 +104,10 @@ const Component = (): JSX.Element => {
         style={ButtonStyle.Danger}
         onClick={() => setCount((prev) => prev + 1)}
       >
-        Increment
+        Incrementasdasda
       </Button>
       <Separator />
       <Text>## Count `{count}`</Text>
     </Container>
   )
 }
-
-export const testCommand = createSlashCommand("ping", {
-  command: (command) =>
-    command
-      .setDescription("Replies with Pong!")
-      .addTypedStringOption((option) =>
-        option
-          .setName("msg")
-          .setDescription("The input to echo back")
-          .setRequired(true),
-      )
-      .addTypedUserOption((option) =>
-        option.setName("target").setDescription("Goat").setRequired(true),
-      ),
-  loader: async () => {
-    return {
-      greeting: "Hello",
-    }
-  },
-  component: Component,
-})

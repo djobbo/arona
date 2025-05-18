@@ -7,6 +7,9 @@ export * from "./link-button"
 export * from "./separator"
 export * from "./section"
 export * from "./text"
+export * from "./media-gallery"
+export * from "./modal"
+export * from "./select"
 
 // type _FileAttachmentBase = { file: FileAttachment } | { src: string }
 

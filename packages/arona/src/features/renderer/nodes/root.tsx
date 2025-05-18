@@ -87,7 +87,6 @@ export class AronaRootNode extends AronaNode {
   }
 
   unmount() {
-    console.log("Unmounting root")
     this.unmounted = true
     this.#unmountTimeout && clearTimeout(this.#unmountTimeout)
     this.#interactionListeners.clear()
@@ -227,9 +226,6 @@ export class AronaRootNode extends AronaNode {
       null,
       () => {
         if (!this.#modalRoot) return
-
-        console.log(this.#modalRoot.children)
-
         const modal = renderModalComponent(this.#modalRoot.children[0])
 
         // TODO: clean this up

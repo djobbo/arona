@@ -1,6 +1,6 @@
 import { AronaClient } from "./features/discord-client/client"
 import { Events, GatewayIntentBits } from "discord.js"
-import { testCommand } from "./test-command"
+import { testCommand } from "./features/test-commands/test-command"
 
 const client = new AronaClient({
   token: process.env.DISCORD_APP_TOKEN!,
@@ -15,13 +15,3 @@ client.once(Events.ClientReady, () => {
 
 client.addCommands([testCommand])
 await client.login()
-
-// if (import.meta.hot) {
-//   import.meta.hot.accept(() => {
-//     console.log("♻️ index.ts updated")
-//   })
-
-//   import.meta.hot.dispose(() => {
-//     console.log("🧹 index.ts dispose")
-//   })
-// }
