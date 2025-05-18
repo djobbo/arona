@@ -5,7 +5,6 @@ import {
   MessageFlags,
   TextDisplayBuilder,
 } from "discord.js"
-import { ConcurrentRoot } from "react-reconciler/constants"
 import { MessageProvider } from "../message-provider"
 import {
   type ModalComponent,
@@ -74,7 +73,7 @@ export class AronaRootNode extends AronaNode {
     this.reconcilerInstance = reconcilerInstance
     this.#rootContainer = this.reconcilerInstance.createContainer(
       this,
-      ConcurrentRoot,
+      1, // ConcurrentRoot
       null,
       false,
       false,
@@ -209,7 +208,7 @@ export class AronaRootNode extends AronaNode {
     this.#modalRoot ??= new AronaNode("arona:__modal-root", {}, this)
     this.#modalContainer ??= this.reconcilerInstance.createContainer(
       this.#modalRoot,
-      ConcurrentRoot,
+      1, // ConcurrentRoot
       null,
       false,
       false,

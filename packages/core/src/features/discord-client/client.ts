@@ -1,15 +1,10 @@
-import {
-  Client,
-  type ClientEvents,
-  type ClientOptions,
-  type Interaction,
-} from "discord.js"
+import { Client, type ClientOptions, type Interaction } from "discord.js"
 import { getTypedInteraction } from "../command/command-builder"
 import { reloadCommands } from "../command/helpers/reload-commands"
 import type { AronaRootNode } from "../renderer/nodes/root"
 import type { createSlashCommand } from "../command/create-slash-command"
 
-interface AronaClientOptions extends ClientOptions {
+export interface AronaClientOptions extends ClientOptions {
   token: string
   clientId: string
   devGuildId?: string
@@ -30,6 +25,7 @@ export class AronaClient extends Client {
   #interactionRoots = new Map<string, AronaRootNode>()
 
   constructor({ token, devGuildId, clientId, ...options }: AronaClientOptions) {
+    console.log("🌱 Initializing Arona...")
     super(options)
 
     this.#token = token

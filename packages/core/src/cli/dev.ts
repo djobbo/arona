@@ -20,7 +20,7 @@ const startDevServer = async (
     target: "node",
     mode: "development",
     entry: {
-      main: [`${require.resolve("webpack/hot/poll")}?1000`, entry],
+      main: ["webpack/hot/poll?100", entry],
     },
     devtool: "source-map",
     externals: [

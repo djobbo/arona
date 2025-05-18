@@ -7,7 +7,7 @@ import { render } from "../renderer/render"
 
 export const createSlashCommand = <
   Params = {},
-  LoaderData extends unknown = void,
+  LoaderData extends unknown = never,
 >(
   name: string,
   {
@@ -20,7 +20,7 @@ export const createSlashCommand = <
       | ((
           command: InstanceType<typeof SlashCommandBuilder>,
         ) => InstanceType<typeof SlashCommandBuilder<Params>>)
-    loader: (
+    loader?: (
       interaction: SlashCommandInteraction<Params>,
     ) => Promise<LoaderData>
     component?: (props: {
@@ -39,7 +39,7 @@ export const createSlashCommand = <
       const { commandName } = interaction
       if (commandName !== name) return
 
-      const loaderData = await loader(interaction)
+      const loaderData = await loader?.(interaction)
       if (Component) {
         render(
           () => (

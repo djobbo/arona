@@ -1,18 +1,31 @@
 {
-  "name": "arona",
-  "module": "index.ts",
+  "name": "@arona/core",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "arona": "./dist/cli.js"
+  },
   "scripts": {
-    "dev": "vite-node --watch src/index.ts",
-    "hk": "vite-node --watch src/hooks-test.tsx"
+    "build": "tsup --entry.index src/index.ts --format esm,cjs --dts",
+    "build:cli": "tsup --entry.cli src/cli/index.ts --format esm"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/react": "18.3.0",
     "@types/react-reconciler": "0.28.8",
     "@types/webpack-node-externals": "^3.0.4",
-    "react-refresh": "^0.17.0"
+    "react-refresh": "^0.17.0",
+    "tsup": "^8.5.0"
   },
   "peerDependencies": {
     "typescript": "^5.8.3"
@@ -23,6 +36,7 @@
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.4.1",
     "discord.js": "^14.19.3",
+    "dotenv": "^16.5.0",
     "react": "18.3.0",
     "react-reconciler": "0.28.0",
     "ts-morph": "^25.0.1",
