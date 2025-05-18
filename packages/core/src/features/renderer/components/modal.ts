@@ -44,6 +44,7 @@ interface TextInputProps extends Omit<TextInputComponentData, "customId"> {
   customId?: ModalComponentData["customId"]
   name: string
   onChange?: (value: string, interaction: Interaction) => unknown
+  required?: boolean
 }
 
 export const {
@@ -59,10 +60,19 @@ export const {
     onChange: (value: string, interaction: Interaction) => unknown
   }
 >("arona:text-input", (node) => {
-  const { customId = node.uuid, name, onChange, ...props } = node.props
+  const {
+    customId = node.uuid,
+    value,
+    required,
+    name,
+    onChange,
+    ...props
+  } = node.props
 
   const textInput = new TextInputBuilder({
     customId,
+    ...(value ? { value } : void 0),
+    required: required ?? false,
     ...props,
   })
 

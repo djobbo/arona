@@ -2,27 +2,28 @@ import {
   isActionRowComponent,
   isButtonComponent,
   isContainerComponent,
+  isGalleryComponent,
   isLinkButtonComponent,
+  isMediaComponent,
   isSectionAccessoryComponent,
   isSectionComponent,
+  isSelectComponent,
   isSeparatorComponent,
   isTextComponent,
+  isThumbnailComponent,
   renderActionRowComponent,
   renderButtonComponent,
   renderContainerComponent,
+  renderGalleryComponent,
   renderLinkButtonComponent,
+  renderMediaComponent,
   renderSectionAccessoryComponent,
   renderSectionComponent,
+  renderSelectComponent,
   renderSeparatorComponent,
   renderTextComponent,
+  renderThumbnailComponent,
 } from "../components"
-import {
-  isGalleryComponent,
-  isMediaComponent,
-  renderGalleryComponent,
-  renderMediaComponent,
-} from "../components/media-gallery"
-import { isSelectComponent, renderSelectComponent } from "../components/select"
 import type { AronaNode } from "../nodes/node"
 import type { RenderOutput } from "./define-component"
 
@@ -58,6 +59,8 @@ const renderNode = (node?: AronaNode | null): RenderOutput => {
       return renderSeparatorComponent(node)
     case isTextComponent(node):
       return renderTextComponent(node)
+    case isThumbnailComponent(node):
+      return renderThumbnailComponent(node)
     default:
       throw new Error(
         `Unhandled element type: ${node.type} inside ${node.parent?.type}`,

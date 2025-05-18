@@ -10,6 +10,7 @@ export * from "./text"
 export * from "./media-gallery"
 export * from "./modal"
 export * from "./select"
+export * from "./thumbnail"
 
 // type _FileAttachmentBase = { file: FileAttachment } | { src: string }
 
