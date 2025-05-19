@@ -1,40 +1,37 @@
 {
-  "name": "create-reaccord-app",
-  "version": "0.0.0-dev",
-  "description": "",
-  "exports": {
-    ".": "./create-reaccord-app.mjs"
-  },
-  "main": "./create-reaccord-app.mjs",
-  "types": "lib/index.d.ts",
-  "type": "module",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/djobbo/reaccord.git",
-    "directory": "packages/create-reaccord-app"
-  },
-  "bin": {
-    "create-reaccord-app": "./create-reaccord-app.mjs"
-  },
-  "scripts": {
-    "build": "tsc",
-    "build:w": "tsc --watch",
-    "check:types": "tsc --noEmit"
-  },
-  "files": [
-    "lib",
-    "create-reaccord-app.mjs"
-  ],
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "@astrojs/cli-kit": "^0.4.1",
-    "arg": "^5.0.2",
-    "giget": "^1.2.3"
-  },
-  "devDependencies": {
-    "@types/uuid": "^9.0.8",
-    "typescript": "^5.4.5"
-  }
+	"name": "create-reaccord-app",
+	"version": "0.0.0-dev",
+	"description": "",
+	"exports": {
+		".": "./create-reaccord-app.mjs"
+	},
+	"main": "./create-reaccord-app.mjs",
+	"types": "lib/index.d.ts",
+	"type": "module",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/djobbo/reaccord.git",
+		"directory": "packages/create-reaccord-app"
+	},
+	"bin": {
+		"create-reaccord-app": "./create-reaccord-app.mjs"
+	},
+	"scripts": {
+		"build": "tsc",
+		"build:w": "tsc --watch",
+		"check:types": "tsc --noEmit"
+	},
+	"files": ["lib", "create-reaccord-app.mjs"],
+	"keywords": [],
+	"author": "",
+	"license": "MIT",
+	"dependencies": {
+		"@astrojs/cli-kit": "^0.4.1",
+		"arg": "^5.0.2",
+		"giget": "^1.2.3"
+	},
+	"devDependencies": {
+		"@types/uuid": "^9.0.8",
+		"typescript": "^5.4.5"
+	}
 }

@@ -1,36 +1,39 @@
 {
-  "$schema": "https://turborepo.org/schema.json",
-  "pipeline": {
-    "dev": {
-      "cache": false,
-      "dependsOn": ["^build"]
-    },
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "lib/**"]
-    },
-    "test": {
-      "cache": false,
-      "outputs": []
-    },
-    "test:w": {
-      "cache": false,
-      "outputs": []
-    },
-    "build:w": {
-      "cache": false,
-      "outputs": []
-    },
-    "check:types": {
-      "cache": false,
-      "dependsOn": ["^build"]
-    },
-    "docs:build": {
-      "cache": false
-    },
-    "docs:dev": {},
-    "publish:dev": {
-      "dependsOn": ["^build"]
-    }
-  }
+	"$schema": "https://turbo.build/schema.json",
+	"globalDependencies": [".env"],
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build", "build:types"],
+			"outputs": ["dist/**"]
+		},
+		"check:types": {
+			"dependsOn": ["^check:types"]
+		},
+		"check:lint": {
+			"dependsOn": ["^check:lint"]
+		},
+		"lint": {
+			"dependsOn": ["^lint"]
+		},
+		"//#check:lint": {
+			"dependsOn": [],
+			"outputs": []
+		},
+		"//#lint": {
+			"dependsOn": [],
+			"outputs": []
+		},
+		"dev": {
+			"persistent": true,
+			"cache": false
+		},
+		"pkg:update": {
+			"dependsOn": ["^pkg:update"],
+			"outputs": []
+		},
+		"//#pkg:update": {
+			"dependsOn": [],
+			"outputs": []
+		}
+	}
 }

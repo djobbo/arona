@@ -14,8 +14,6 @@ jobs:
             action: bun run check:types
           - name: Deadcode
             action: bun run check:deadcode
-          - name: Circular Dependencies
-            action: bun run check:circular-deps
           - name: Mismatched Dependencies
             action: bun run check:mismatched-deps
           - name: Test

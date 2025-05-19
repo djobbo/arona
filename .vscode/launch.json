@@ -1,19 +1,19 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Reaccord: Debug Rick and Morty Example",
-      "cwd": "${workspaceFolder}/examples/rick-and-morty-api",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev"
-    },
-    {
-      "name": "Reaccord: Debug Simple Counter Example",
-      "cwd": "${workspaceFolder}/examples/simple-counter",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev"
-    }
-  ]
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Reaccord: Debug Rick and Morty Example",
+			"cwd": "${workspaceFolder}/examples/rick-and-morty-api",
+			"type": "node-terminal",
+			"request": "launch",
+			"command": "bun run dev"
+		},
+		{
+			"name": "Reaccord: Debug Simple Counter Example",
+			"cwd": "${workspaceFolder}/examples/simple-counter",
+			"type": "node-terminal",
+			"request": "launch",
+			"command": "bun run dev"
+		}
+	]
 }

@@ -1,34 +1,32 @@
 {
-  "name": "@reaccord/canvas",
-  "version": "0.0.0-dev",
-  "description": "",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "build:w": "tsc --watch",
-    "check:types": "tsc --noEmit"
-  },
-  "files": [
-    "lib"
-  ],
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@tanstack/react-query": "^5.29.2",
-    "discord.js": "^14.14.1",
-    "playwright-core": "^1.43.1",
-    "reaccord": "workspace:0.0.0-dev",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "uuid": "^9.0.1"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.79",
-    "@types/react-dom": "^18.2.25",
-    "@types/uuid": "^9.0.8",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.4.5"
-  }
+	"name": "@reaccord/canvas",
+	"version": "0.0.0-dev",
+	"description": "",
+	"main": "lib/index.js",
+	"types": "lib/index.d.ts",
+	"scripts": {
+		"build": "tsc",
+		"build:w": "tsc --watch",
+		"check:types": "tsc --noEmit"
+	},
+	"files": ["lib"],
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@tanstack/react-query": "^5.29.2",
+		"discord.js": "^14.14.1",
+		"playwright-core": "^1.43.1",
+		"reaccord": "workspace:0.0.0-dev",
+		"react": "^19.1.0",
+		"react-dom": "^19.1.0",
+		"uuid": "^9.0.1"
+	},
+	"devDependencies": {
+		"@types/react": "^18.2.79",
+		"@types/react-dom": "^18.2.25",
+		"@types/uuid": "^9.0.8",
+		"ts-node-dev": "^2.0.0",
+		"typescript": "^5.4.5"
+	}
 }
