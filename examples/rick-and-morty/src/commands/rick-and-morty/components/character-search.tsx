@@ -1,4 +1,4 @@
-import { Button, Section, Text, useModal } from "@arona/core"
+import { Button, Section, Text, useModal } from "@arona/discord"
 import { CharacterSearchModal } from "./character-search-modal"
 import { useCharacterSearch } from "../hooks/character-search-provider"
 

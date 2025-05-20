@@ -1,4 +1,3 @@
-import { CharacterDisplay } from "../components/character-display"
 import {
   type ReactNode,
   createContext,
@@ -66,6 +65,10 @@ export const CharacterSearchProvider = ({
   useEffect(() => {
     setCharacter(characters?.[0] ?? null)
   }, [characters])
+
+  useEffect(() => {
+    setPage(1)
+  }, [search])
 
   return (
     <characterSearchContext.Provider

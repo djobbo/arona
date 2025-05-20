@@ -1,6 +1,6 @@
 import { App } from "./app"
 import { QueryClient } from "@tanstack/react-query"
-import { createSlashCommand } from "@arona/core"
+import { createSlashCommand } from "@arona/discord"
 
 export const rickAndMortySearch = createSlashCommand("search", {
   command: (command) =>

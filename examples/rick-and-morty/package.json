@@ -13,7 +13,7 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"@arona/core": "workspace:*",
+		"@arona/discord": "workspace:*",
 		"@tanstack/react-query": "^5.76.1",
 		"discord.js": "^14.19.3"
 	}

@@ -1,4 +1,4 @@
-import { Button, Container, Text } from "@arona/core"
+import { Button, Container, Text } from "@arona/discord"
 import { useState } from "react"
 
 export const Counter = () => {

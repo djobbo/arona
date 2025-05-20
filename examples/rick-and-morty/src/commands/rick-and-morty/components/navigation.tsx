@@ -1,4 +1,4 @@
-import { ActionRow, Button } from "@arona/core"
+import { ActionRow, Button } from "@arona/discord"
 import { ButtonStyle } from "discord.js"
 import { useCharacterSearch } from "../hooks/character-search-provider"
 

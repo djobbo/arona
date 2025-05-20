@@ -1,0 +1,38 @@
+{
+	"name": "@arona/discord",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"type": "module",
+	"private": true,
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"require": "./dist/index.cjs",
+			"import": "./dist/index.js"
+		}
+	},
+	"scripts": {
+		"build": "tsup --entry.index src/index.ts --format esm,cjs --dts",
+		"dev": "tsup --entry.index src/index.ts --format esm,cjs --dts --watch",
+		"generate": "bun run src/commands/generators/command-builder.ts",
+		"lint": "biome check --write",
+		"check:lint": "biome check",
+		"check:types": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@types/bun": "latest",
+		"@types/react": "18.3.0",
+		"tsup": "^8.5.0"
+	},
+	"peerDependencies": {
+		"typescript": "^5.8.3"
+	},
+	"dependencies": {
+		"discord.js": "^14.19.3",
+		"dotenv": "^16.5.0",
+		"react": "18.3.0",
+		"@arona/core": "workspace:*"
+	}
+}

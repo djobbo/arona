@@ -1,4 +1,4 @@
-import { Button, Container, Section, Text, Thumbnail } from "@arona/core"
+import { Button, Container, Section, Text, Thumbnail } from "@arona/discord"
 import { useCharacterSearch } from "../hooks/character-search-provider"
 import type { CharacterStatus } from "../types"
 import type { ColorResolvable } from "discord.js"

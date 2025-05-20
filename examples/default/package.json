@@ -13,6 +13,6 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"@arona/core": "workspace:*"
+		"@arona/discord": "workspace:*"
 	}
 }

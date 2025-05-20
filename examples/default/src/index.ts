@@ -1,8 +1,8 @@
-import { AronaClient } from "@arona/core"
+import { AronaDiscordClient } from "@arona/discord"
 import { Events, GatewayIntentBits } from "discord.js"
 import { counter } from "./commands/counter"
 
-const client = new AronaClient({
+const client = new AronaDiscordClient({
   token: process.env.DISCORD_APP_TOKEN!,
   clientId: process.env.DISCORD_APP_ID!,
   devGuildId: process.env.DISCORD_DEV_GUILD_ID,

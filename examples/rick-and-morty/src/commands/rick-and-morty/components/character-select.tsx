@@ -1,4 +1,4 @@
-import { Option, Select } from "@arona/core"
+import { Option, Select } from "@arona/discord"
 import { useCharacterSearch } from "../hooks/character-search-provider"
 import type { Character, CharacterStatus } from "../types"
 

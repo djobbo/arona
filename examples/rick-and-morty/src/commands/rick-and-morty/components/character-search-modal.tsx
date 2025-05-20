@@ -1,4 +1,4 @@
-import { Modal, TextInput } from "@arona/core"
+import { Modal, TextInput } from "@arona/discord"
 import { TextInputStyle } from "discord.js"
 import { useCharacterSearch } from "../hooks/character-search-provider"
 

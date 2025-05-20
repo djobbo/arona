@@ -5,7 +5,10 @@ import type { RootNode } from "../renderer/RootNode"
 
 const rootNodeContextInternal = createContext<RootNode | null>(null)
 
-export const useRootNodeContextInternal = () => {
+/**
+ * @deprecated This is an internal hook and should not be used outside of the library.
+ */
+export const useRootNodeContextInternal_DO_NOT_USE_UNLESS_YOU_KNOW_WHAT_YOU_ARE_DOING = () => {
   const [, forceUpdate] = useReducer(() => ({}), {})
   const rootNode = useContext(rootNodeContextInternal)
 
@@ -28,7 +31,7 @@ export type MessageContext = {
 }
 
 export const useMessageCtx = (): MessageContext => {
-  const rootNode = useRootNodeContextInternal()
+  const rootNode = useRootNodeContextInternal_DO_NOT_USE_UNLESS_YOU_KNOW_WHAT_YOU_ARE_DOING()
 
   return {
     client: rootNode.discordClient,

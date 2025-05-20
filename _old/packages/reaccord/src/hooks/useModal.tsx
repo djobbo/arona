@@ -1,7 +1,7 @@
 import { ReaccordNode } from "../renderer/ReaccordNode"
 import { renderModalRoot } from "../renderer/renderMessageContent"
 import { renderWithRootContext } from "../renderer/renderWithRootContext"
-import { useRootNodeContextInternal } from "./MessageContext"
+import { useRootNodeContextInternal_DO_NOT_USE_UNLESS_YOU_KNOW_WHAT_YOU_ARE_DOING } from "./MessageContext"
 import type {
   AutocompleteInteraction,
   Interaction,
@@ -54,7 +54,7 @@ const openModal =
   }
 
 export const useModal = () => {
-  const rootNode = useRootNodeContextInternal()
+  const rootNode = useRootNodeContextInternal_DO_NOT_USE_UNLESS_YOU_KNOW_WHAT_YOU_ARE_DOING()
 
   return {
     // If used directly inside button (<button onClick={openModal(Modal)}/>),
