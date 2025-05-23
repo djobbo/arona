@@ -96,15 +96,15 @@ export class DiscordRootNode extends AronaRootNode {
 		if (!this.interactionRef) throw new Error("No interaction ref")
 
 		const content = renderRootComponents(this.children)
-		const components = content.map((component) =>
+		const components = content.flatMap((component) =>
 			"components" in component ? component.components : [],
-		).flat()
-		const files = content.map((component) =>
+		)
+		const files = content.flatMap((component) =>
 			"files" in component ? component.files : [],
-		).flat()
-		const interactionListeners = content.map((component) =>
+		)
+		const interactionListeners = content.flatMap((component) =>
 			"listenerEntries" in component ? component.listenerEntries : [],
-		).flat()
+		)
 		const isEmptyMessage = components.length === 0
 
 		const messageContent = {
