@@ -1,0 +1,7 @@
+# Generated templates directory
+templates/
+
+# Environment variables
+.env
+.env.local
+.env.*.local 

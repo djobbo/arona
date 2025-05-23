@@ -1,5 +1,6 @@
 {
 	"name": "@arona-ex/rick-and-morty",
+	"description": "An example app that demonstrates API integration with the Rick and Morty API",
 	"module": "index.ts",
 	"type": "module",
 	"private": true,

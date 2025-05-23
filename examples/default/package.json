@@ -1,5 +1,6 @@
 {
 	"name": "@arona-ex/default",
+	"description": "A basic Arona app setup with essential features",
 	"module": "index.ts",
 	"type": "module",
 	"private": true,
