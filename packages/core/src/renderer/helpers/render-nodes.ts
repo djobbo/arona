@@ -14,6 +14,7 @@ const renderNode =
 			}
 		}
 
+		// TODO: add a callback to the renderer to handle unhandled nodes
 		throw new Error(
 			`Unhandled element type: ${node.type} inside ${node.parent?.type}`,
 		)

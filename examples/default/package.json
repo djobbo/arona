@@ -4,7 +4,8 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"dev": "arona dev ./src/index.ts"
+		"dev": "arona dev ./src/index.ts",
+		"build": "arona build ./src/index.ts"
 	},
 	"devDependencies": {
 		"@types/bun": "latest"
@@ -13,6 +14,8 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"@arona/discord": "workspace:*"
+		"@arona/discord": "workspace:*",
+		"@fontsource/roboto": "^5.2.5",
+		"@fontsource/slackey": "^5.2.5"
 	}
 }

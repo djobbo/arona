@@ -3,6 +3,7 @@
 import path from "node:path"
 import dotenv from "dotenv"
 import { dev } from "./dev"
+import { build } from './build'
 
 const [, , cmd, ...rest] = process.argv
 
@@ -22,6 +23,17 @@ switch (cmd) {
 		const entry = path.resolve(process.cwd(), entryPoint)
 		dev(entry)
 
+		break
+	}
+	case "build": {
+		const [entryPoint] = rest
+		if (!entryPoint) {
+			console.error("Please provide an entry point file path.")
+			console.error("Usage: arona build <entry-point>")
+			process.exit(1)
+		}
+		const entry = path.resolve(process.cwd(), entryPoint)
+		build(entry)
 		break
 	}
 	case undefined:

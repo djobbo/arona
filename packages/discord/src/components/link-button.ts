@@ -7,9 +7,10 @@ import {
 	type MessageActionRowComponentBuilder,
 } from "discord.js"
 import type { ReactNode } from "react"
+import type { AronaDiscordProps } from './types'
 
 export interface LinkButtonProps
-	extends Omit<LinkButtonComponentData, "style"> {
+	extends Omit<AronaDiscordProps<LinkButtonComponentData>, "style"> {
 	children?: ReactNode
 }
 

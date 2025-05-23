@@ -30,9 +30,12 @@
 		"typescript": "^5.8.3"
 	},
 	"dependencies": {
+		"@arona/core": "workspace:*",
+		"@resvg/resvg-js": "^2.6.2",
+		"@typescript/native-preview": "^7.0.0-dev.20250522.2",
 		"discord.js": "^14.19.3",
 		"dotenv": "^16.5.0",
 		"react": "18.3.0",
-		"@arona/core": "workspace:*"
+		"satori": "^0.13.1"
 	}
 }

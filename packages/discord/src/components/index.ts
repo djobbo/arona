@@ -12,6 +12,10 @@ import { containerComponent } from "./container"
 export * from "./container"
 export const Container = containerComponent.component
 
+import { fileComponent } from "./file"
+export * from "./file"
+export const File = fileComponent.component
+
 import { linkButtonComponent } from "./link-button"
 export * from "./link-button"
 export const LinkButton = linkButtonComponent.component
@@ -26,7 +30,7 @@ export * from "./modal"
 export const Modal = modalComponent.component
 export const TextInput = textInputComponent.component
 
-import { selectComponent, optionComponent } from "./select"
+import { optionComponent, selectComponent } from "./select"
 export * from "./select"
 export const Select = selectComponent.component
 export const Option = optionComponent.component
@@ -44,3 +48,5 @@ export const Text = textComponent.component
 import { thumbnailComponent } from "./thumbnail"
 export * from "./thumbnail"
 export const Thumbnail = thumbnailComponent.component
+
+export * from './canvas'

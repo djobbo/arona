@@ -1,8 +1,7 @@
 import child from "node:child_process"
 import path from "node:path"
 import { rspack } from "@rspack/core"
-import ReactRefreshPlugin from "@rspack/plugin-react-refresh"
-import nodeExternals from "webpack-node-externals"
+import { createRspackConfig } from "./rspack.config"
 
 const startDevServer = async (
 	{
@@ -16,61 +15,15 @@ const startDevServer = async (
 	},
 	callback: Parameters<typeof rspack.Compiler.prototype.watch>[1],
 ) => {
-	const compiler = rspack({
-		target: "node",
-		mode: "development",
-		entry: {
-			main: ["webpack/hot/poll?100", entry],
-		},
-		devtool: "source-map",
-		externals: [
-			// @ts-expect-error - webpack-node-externals type is not compatible with rspack
-			nodeExternals({
-				allowlist: ["webpack/hot/poll"],
-			}),
-		],
-		externalsPresets: {
-			node: true,
-		},
-		plugins: [
-			new ReactRefreshPlugin(),
-			new rspack.HotModuleReplacementPlugin(),
-		],
-		output: {
-			filename: outputFile,
-			path: outputPath,
-			clean: true,
-		},
-		module: {
-			rules: [
-				{
-					test: /\.(j|t)sx?$/,
-					use: {
-						loader: "builtin:swc-loader",
-						options: {
-							jsc: {
-								parser: {
-									syntax: "typescript",
-									tsx: true,
-								},
-								transform: {
-									react: {
-										runtime: "automatic",
-										development: true,
-										refresh: true,
-									},
-								},
-							},
-						},
-					},
-					type: "javascript/auto",
-				},
-			],
-		},
-		resolve: {
-			extensions: [".tsx", ".ts", ".js", ".jsx"],
-		},
-	})
+	const compiler = rspack(
+		createRspackConfig({
+			entry,
+			outputFile,
+			outputFolder: outputPath,
+			mode: "development",
+			hot: true,
+		})
+	)
 
 	compiler.hooks.watchRun.tap("WatchRunPlugin", (compiler) => {
 		console.log("Compilation starting after file change...")

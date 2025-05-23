@@ -35,6 +35,9 @@ export const containerComponent = defineComponent({
 					"listenerEntries" in component ? component.listenerEntries : [],
 				)
 				.filter(Boolean),
+			files: content.flatMap((component) =>
+				"files" in component ? component.files : [],
+			),
 		}
 	},
 })
