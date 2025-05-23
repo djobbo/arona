@@ -26,7 +26,7 @@ export const sectionAccessoryComponent_DO_NOT_USE_UNLESS_YOU_KNOW_WHAT_YOU_ARE_D
 			(renderChildren) => (node: AronaNode<SectionAccessoryInternalProps>) => {
 				const content = renderChildren(node.children)
 				return {
-					components: content.flatMap(({ components }) => components),
+					components: content.map(({ components }) => components).flat(),
 					listenerEntries: content.flatMap(
 						({ listenerEntries }) => listenerEntries,
 					),

@@ -7,13 +7,13 @@
 			"outputs": ["dist/**"]
 		},
 		"check:types": {
-			"dependsOn": ["^check:types"]
+			"dependsOn": ["^build"]
 		},
 		"check:lint": {
-			"dependsOn": ["^check:lint"]
+			"dependsOn": []
 		},
 		"lint": {
-			"dependsOn": ["^lint"]
+			"dependsOn": []
 		},
 		"//#check:lint": {
 			"dependsOn": [],
