@@ -23,6 +23,9 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
-    "declaration": true
-  }
+    "declaration": true,
+  },
+  "include": [
+    "src/**/*"
+  ]
 }

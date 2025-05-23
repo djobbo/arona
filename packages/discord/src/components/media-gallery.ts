@@ -6,33 +6,43 @@ import {
 	type MediaGalleryItemData,
 } from "discord.js"
 import type { ReactNode } from "react"
-import type { AronaDiscordProps } from './types'
-import { createAttachment, type Attachment } from './helpers/create-attachment'
+import { type Attachment, createAttachment } from "./helpers/create-attachment"
+import type { AronaDiscordProps } from "./types"
 
-export type MediaProps = Omit<AronaDiscordProps<MediaGalleryItemData>, "media"> & ({
-	file: Attachment
-	name?: string
-} | {
-	url: string
-})
+export type MediaProps = Omit<
+	AronaDiscordProps<MediaGalleryItemData>,
+	"media"
+> &
+	(
+		| {
+				file: Attachment
+				name?: string
+		  }
+		| {
+				url: string
+		  }
+	)
 
 const renderBaseMedia = (node: AronaNode<MediaProps>) => {
-	if ('file' in node.props && node.props.file) {
-		const attachment = createAttachment(node.props.file, node.props.name ?? node.uuid)
+	if ("file" in node.props && node.props.file) {
+		const attachment = createAttachment(
+			node.props.file,
+			node.props.name ?? node.uuid,
+		)
 		const item = new MediaGalleryItemBuilder({
-				...node.props,
+			...node.props,
 			media: {
-				url: attachment.url
-			}
+				url: attachment.url,
+			},
 		}).toJSON()
 
 		return {
 			component: item,
-			files: [attachment.data]
+			files: [attachment.data],
 		}
 	}
 
-	if ('url' in node.props && node.props.url) {
+	if ("url" in node.props && node.props.url) {
 		const item = new MediaGalleryItemBuilder({
 			...node.props,
 		}).toJSON()
@@ -84,7 +94,8 @@ export const mediaWithGalleryComponent = defineComponent({
 	},
 })
 
-export interface GalleryProps extends Omit<AronaDiscordProps<APIMediaGalleryComponent>, "items"> {
+export interface GalleryProps
+	extends Omit<AronaDiscordProps<APIMediaGalleryComponent>, "items"> {
 	children?: ReactNode
 }
 

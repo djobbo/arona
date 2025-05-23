@@ -5,7 +5,6 @@ import { readFileSync } from 'fs'
 
 const require = createRequire(import.meta.url)
 const resolve = require.resolve
-const roboto = readFileSync(resolve("@fontsource/roboto/files/roboto-latin-400-normal.woff"))
 const slackey = readFileSync(resolve("@fontsource/slackey/files/slackey-latin-400-normal.woff"))
 
 export const Counter = () => {
@@ -23,8 +22,8 @@ export const Counter = () => {
         +
       </Button>
       <Canvas width={256} height={96} name="counter.png" fonts={[{
-        name: "Roboto",
-        data: roboto,
+        name: "Slackey",
+        data: slackey,
         style: "normal",
         weight: 400,
       }]}>

@@ -31,7 +31,7 @@ export const reloadCommands = async ({
 			},
 		)
 
-		console.log(`✅ Successfully reloaded application (/) commands.`)
+		console.log("✅ Successfully reloaded application (/) commands.")
 	} catch (error) {
 		console.error(error)
 	}

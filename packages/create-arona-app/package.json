@@ -1,35 +1,27 @@
 {
-  "name": "create-arona-app",
-  "version": "0.1.0",
-  "description": "Create a new Arona app with a single command",
-  "type": "module",
-  "bin": {
-    "create-arona-app": "./bin/create-arona-app.js"
-  },
-  "files": [
-    "bin",
-    "templates"
-  ],
-  "scripts": {
-    "build": "bun run scripts/copy-templates.ts",
-    "prepublishOnly": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [
-    "arona",
-    "create-arona-app",
-    "scaffold",
-    "template"
-  ],
-  "author": "",
-  "dependencies": {
-    "chalk": "^5.3.0",
-    "commander": "^11.1.0",
-    "fs-extra": "^11.2.0",
-    "inquirer": "^9.2.12",
-    "ora": "^7.0.1"
-  },
-  "devDependencies": {
-    "bun-types": "latest"
-  }
+	"name": "create-arona-app",
+	"version": "0.1.0",
+	"description": "Create a new Arona app with a single command",
+	"type": "module",
+	"bin": {
+		"create-arona-app": "./bin/create-arona-app.js"
+	},
+	"files": ["bin", "templates"],
+	"scripts": {
+		"build": "bun run scripts/copy-templates.ts",
+		"prepublishOnly": "npm run build",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": ["arona", "create-arona-app", "scaffold", "template"],
+	"author": "",
+	"dependencies": {
+		"chalk": "^5.3.0",
+		"commander": "^11.1.0",
+		"fs-extra": "^11.2.0",
+		"inquirer": "^9.2.12",
+		"ora": "^7.0.1"
+	},
+	"devDependencies": {
+		"bun-types": "latest"
+	}
 }

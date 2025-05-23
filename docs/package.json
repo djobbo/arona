@@ -1,24 +1,17 @@
 {
-	"name": "docs",
-	"type": "module",
-	"version": "0.0.1",
-	"scripts": {
-		"dev": "astro dev",
-		"start": "astro dev",
-		"build": "astro check && astro build",
-		"docs:build": "astro check && astro build",
-		"docs:dev": "astro dev",
-		"preview": "astro preview",
-		"astro": "astro"
-	},
-	"dependencies": {
-		"@astrojs/check": "^0.5.10",
-		"@astrojs/starlight": "^0.21.5",
-		"@astrojs/starlight-tailwind": "^2.0.2",
-		"@astrojs/tailwind": "^5.1.0",
-		"astro": "^4.6.2",
-		"sharp": "^0.33.3",
-		"tailwindcss": "^3.4.1",
-		"typescript": "^5.4.5"
-	}
+  "name": "docs",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.34.3",
+    "astro": "^5.6.1",
+    "sharp": "^0.32.5"
+  }
 }

@@ -2,8 +2,8 @@
 
 import path from "node:path"
 import dotenv from "dotenv"
+import { build } from "./build"
 import { dev } from "./dev"
-import { build } from './build'
 
 const [, , cmd, ...rest] = process.argv
 
@@ -43,7 +43,7 @@ switch (cmd) {
 		console.log(
 			"  dev <entry-point>   Start the development server with the specified entry point.",
 		)
-		process.exit(0)
+		break
 	default:
 		console.error(`Unknown command: ${cmd}`)
 		console.error("Usage: arona dev <entry-point>")

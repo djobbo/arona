@@ -158,7 +158,7 @@ export class SlashCommandAttachmentOption<
 	}
 }
 
-export class SlashCommandBuilder<Params = {}> extends DJSSlashCommandBuilder {
+export class SlashCommandBuilder<Params> extends DJSSlashCommandBuilder {
 	params: { name: string; type: ApplicationCommandOptionType }[] = []
 
 	addTypedStringOption<
@@ -554,12 +554,12 @@ export class SlashCommandBuilder<Params = {}> extends DJSSlashCommandBuilder {
 	}
 }
 
-export interface SlashCommandInteraction<Params = {}>
+export interface SlashCommandInteraction<Params>
 	extends ChatInputCommandInteraction {
 	params: Params
 }
 
-export function getTypedInteraction<Params = {}>(
+export function getTypedInteraction<Params>(
 	command: SlashCommandBuilder<Params>,
 	interaction: ChatInputCommandInteraction,
 ): SlashCommandInteraction<Params> {
@@ -603,6 +603,6 @@ export function getTypedInteraction<Params = {}>(
 		},
 		{} as Record<string, unknown>,
 	)
-	;(interaction as SlashCommandInteraction).params = params
+	;(interaction as SlashCommandInteraction<Params>).params = params as Params
 	return interaction as SlashCommandInteraction<Params>
 }

@@ -49,4 +49,4 @@ import { thumbnailComponent } from "./thumbnail"
 export * from "./thumbnail"
 export const Thumbnail = thumbnailComponent.component
 
-export * from './canvas'
+export * from "./canvas"

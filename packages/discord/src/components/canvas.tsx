@@ -1,7 +1,7 @@
+import { Resvg } from "@resvg/resvg-js"
 import { type ReactNode, useEffect, useState } from "react"
 import satori, { type Font } from "satori"
 import { type MediaProps, mediaComponent } from "./media-gallery"
-import {Resvg} from "@resvg/resvg-js"
 
 const DEFAULT_WIDTH = 800
 const DEFAULT_HEIGHT = 400
@@ -15,7 +15,13 @@ export interface CanvasProps extends Omit<MediaProps, "media"> {
 	fonts?: Font[]
 }
 
-export const Canvas = ({ children, width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT, name, fonts = [] }: CanvasProps) => {
+export const Canvas = ({
+	children,
+	width = DEFAULT_WIDTH,
+	height = DEFAULT_HEIGHT,
+	name,
+	fonts = [],
+}: CanvasProps) => {
 	const [imageBuffer, setImageBuffer] = useState<Buffer | null>(null)
 
 	useEffect(() => {
@@ -25,7 +31,7 @@ export const Canvas = ({ children, width = DEFAULT_WIDTH, height = DEFAULT_HEIGH
 			const svg = await satori(children, {
 				width,
 				height,
-				fonts
+				fonts,
 			})
 
 			const png = new Resvg(svg, {
@@ -43,7 +49,7 @@ export const Canvas = ({ children, width = DEFAULT_WIDTH, height = DEFAULT_HEIGH
 			setImageBuffer(png)
 		}
 		render().catch(console.error)
-	}, [children])
+	}, [children, fonts, height, width])
 
 	if (!imageBuffer) return null
 

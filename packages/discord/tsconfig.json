@@ -24,5 +24,8 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
     "declaration": true
-  }
+  },
+  "include": [
+    "src/**/*"
+  ]
 }

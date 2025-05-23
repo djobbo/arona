@@ -1,39 +1,26 @@
-import { defineConfig } from "astro/config"
-import starlight from "@astrojs/starlight"
-import tailwind from "@astrojs/tailwind"
+// @ts-check
+import { defineConfig } from 'astro/config';
+import starlight from '@astrojs/starlight';
 
+// https://astro.build/config
 export default defineConfig({
-  site: "https://reaccord.djobbo.com",
-  integrations: [
-    starlight({
-      title: "Reaccord Docs",
-      editLink: {
-        baseUrl: "https://github.com/djobbo/reaccord/edit/master/docs/",
-      },
-      social: {
-        github: "https://github.com/djobbo/reaccord",
-      },
-      sidebar: [
-        {
-          label: "Guides",
-          items: [
-            { label: "Overview", link: "/guides/overview/" },
-            { label: "Getting started", link: "/guides/getting-started/" },
-          ],
-        },
-        {
-          label: "Reference",
-          autogenerate: { directory: "reference" },
-        },
-      ],
-      customCss: ["./src/tailwind.css"],
-      logo: {
-        dark: "./src/assets/reaccord-logo-dark.svg",
-        light: "./src/assets/reaccord-logo-light.svg",
-        alt: "Reaccord Logo",
-      },
-      favicon: "/src/assets/reaccord-logo.svg",
-    }),
-    tailwind({ applyBaseStyles: false }),
-  ],
-})
+	integrations: [
+		starlight({
+			title: 'My Docs',
+			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
+			sidebar: [
+				{
+					label: 'Guides',
+					items: [
+						// Each item here is one entry in the navigation menu.
+						{ label: 'Example Guide', slug: 'guides/example' },
+					],
+				},
+				{
+					label: 'Reference',
+					autogenerate: { directory: 'reference' },
+				},
+			],
+		}),
+	],
+});

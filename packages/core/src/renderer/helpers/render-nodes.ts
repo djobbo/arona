@@ -2,10 +2,10 @@ import type { AronaNode } from "../nodes/node"
 import type { AronaComponent } from "./define-component"
 
 const renderNode =
-	<Props = unknown, RenderOutput extends object | null = null>(
-		components: AronaComponent<Props, RenderOutput>[],
+	<Components extends AronaComponent<any, any>[]>(
+		components: Components,
 	) =>
-	(node?: AronaNode | null) => {
+	(node?: AronaNode | null): NonNullable<Components[number] extends AronaComponent<any, infer Output> ? Output : never> | null => {
 		if (!node) return null
 
 		for (const component of components) {
@@ -21,12 +21,12 @@ const renderNode =
 	}
 
 export const renderComponentNodes =
-	<Props = unknown, RenderOutput extends object | null = null>(
-		components: AronaComponent<Props, RenderOutput>[],
+	<Components extends AronaComponent<any, any>[]>(
+		components: Components,
 	) =>
 	(nodes: AronaNode | AronaNode[]) => {
 		const nodesToRender = Array.isArray(nodes) ? nodes : [nodes]
 		const render = renderNode(components)
 
-		return nodesToRender.map(render).filter((output) => !!output)
+		return nodesToRender.map(render).filter((output): output is NonNullable<typeof output> => !!output)
 	}

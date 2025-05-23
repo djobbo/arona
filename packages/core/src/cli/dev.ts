@@ -22,7 +22,7 @@ const startDevServer = async (
 			outputFolder: outputPath,
 			mode: "development",
 			hot: true,
-		})
+		}),
 	)
 
 	compiler.hooks.watchRun.tap("WatchRunPlugin", (compiler) => {

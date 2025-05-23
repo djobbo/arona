@@ -7,7 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"ignore": [".turbo", ".types"],
+		"ignore": [".turbo", "dist"],
 		"include": ["src/*", "biome.json", "package.json"]
 	},
 	"formatter": {

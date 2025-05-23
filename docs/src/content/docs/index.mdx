@@ -1,46 +1,36 @@
 ---
-title: Welcome to Reaccord
-description: Get Started with Building Interactive Experiences on Discord with Reaccord
+title: Welcome to Starlight
+description: Get started building your docs site with Starlight.
 template: splash
 hero:
-  title: |
-    <span class="text-xs text-accent block uppercase">discord.js ❤️ react ❤️ jsx</span>
-    <span class="font-bold">Build interactive experiences, effortlessly.</span>
-  tagline: |
-    <span class="text-lg">
-      Discover a new way to build Discord bots with
-      <span class="text-accent">Reaccord</span>,
-      a framework that combines the power of Discord.JS
-      with the ease of React and JSX.
-    </span>
+  tagline: Congrats on setting up a new Starlight project!
   image:
-    file: ../../assets/reaccord.svg
+    file: ../../assets/houston.webp
   actions:
-    - text: Getting started
-      link: /guides/overview
+    - text: Example Guide
+      link: /guides/example/
       icon: right-arrow
-      variant: primary
-    - text: Read the docs
-      link: /reference
+    - text: Read the Starlight docs
+      link: https://starlight.astro.build
       icon: external
+      variant: minimal
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-### What it's all about
+## Next steps
 
 <CardGrid stagger>
-	<Card title="Highly interactive bots" icon="setting">
-		Build bots with rich interactions and engaging UIs for your users.
+	<Card title="Update content" icon="pencil">
+		Edit `src/content/docs/index.mdx` to see this page change.
 	</Card>
-	<Card title="Effortlessy write and maintain your UIs" icon="seti:html">
-		Using JSX and React, creating and updating your bot is a breeze.
+	<Card title="Add new content" icon="add-document">
+		Add Markdown or MDX files to `src/content/docs` to create new pages.
 	</Card>
-	<Card title="The power of Discord.JS" icon="rocket">
-		Reaccord is built on top of Discord.JS, so you can use all its features.
+	<Card title="Configure your site" icon="setting">
+		Edit your `sidebar` and other config in `astro.config.mjs`.
 	</Card>
-	<Card title="Get started now!" icon="open-book">
-		Are you ready to get started? Check out our guides and reference documentation.
-    Learn more [here](/guides/getting-started).
+	<Card title="Read the docs" icon="open-book">
+		Learn more in [the Starlight Docs](https://starlight.astro.build/).
 	</Card>
 </CardGrid>
