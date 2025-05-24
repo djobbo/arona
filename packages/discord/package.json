@@ -1,5 +1,7 @@
 {
 	"name": "@arona/discord",
+	"description": "Discord integration for Arona",
+	"version": "0.0.0-dev",
 	"main": "./dist/index.cjs",
 	"module": "./dist/index.js",
 	"types": "./dist/index.d.ts",

@@ -1,6 +1,6 @@
 {
 	"name": "create-arona-app",
-	"version": "0.1.0",
+	"version": "0.0.0-dev",
 	"description": "Create a new Arona app with a single command",
 	"type": "module",
 	"bin": {
