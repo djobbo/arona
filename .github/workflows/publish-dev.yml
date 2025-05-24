@@ -58,8 +58,8 @@ jobs:
             folder: packages/core
           - name: '@arona/discord'
             folder: packages/discord
-          - name: create-arona
-            folder: packages/create-arona
+          - name: create-arona-app
+            folder: packages/create-arona-app
     steps:
       - uses: actions/checkout@v4
         with:
