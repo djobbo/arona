@@ -6,7 +6,10 @@ import chalk from "chalk"
 import stripAnsi from "strip-ansi"
 
 const PLACEHOLDER_VERSION = "0.0.0-dev"
+const MAX_RETRIES = 3
+const RETRY_DELAY = 2000 // 2 seconds
 
+// Logging utilities
 const logInfo = (...args: string[]) =>
   console.log(chalk.gray("[Info]"), ...args)
 const logSuccess = (...args: string[]) =>
@@ -15,6 +18,8 @@ const logError = (...args: string[]) =>
   console.log(chalk.red("[Error]"), ...args)
 const logWarning = (...args: string[]) =>
   console.log(chalk.yellow("[Warning]"), ...args)
+const logDebug = (...args: string[]) =>
+  process.env.DEBUG && console.log(chalk.blue("[Debug]"), ...args)
 const logBoxed = (msg: string) => {
   const len = stripAnsi(msg).length + 2
   console.log("╭" + "─".repeat(len) + "╮")
@@ -22,6 +27,8 @@ const logBoxed = (msg: string) => {
   console.log("╰" + "─".repeat(len) + "╯")
 }
 const newLine = () => console.log()
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 const updateLocalDeps = (deps: Record<string, string>, newVersion: string) =>
   Object.fromEntries(
@@ -37,6 +44,47 @@ const updateLocalDeps = (deps: Record<string, string>, newVersion: string) =>
     ]),
   )
 
+const validateVersion = (version: string) => {
+  const semverRegex = /^\d+\.\d+\.\d+(-dev\.\d+\.\w+)?$/
+  if (!semverRegex.test(version)) {
+    throw new Error(`Invalid version format: ${version}`)
+  }
+}
+
+const checkNpmAuth = async () => {
+  try {
+    await $`npm whoami`
+    return true
+  } catch {
+    return false
+  }
+}
+
+const retryOperation = async <T>(
+  operation: () => Promise<T>,
+  operationName: string,
+  maxRetries = MAX_RETRIES
+): Promise<T> => {
+  let lastError: Error | null = null
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation()
+    } catch (error) {
+      lastError = error as Error
+      logWarning(
+        `${operationName} failed (attempt ${i + 1}/${maxRetries}): ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      )
+      if (i < maxRetries - 1) {
+        logInfo(`Retrying in ${RETRY_DELAY / 1000} seconds...`)
+        await sleep(RETRY_DELAY)
+      }
+    }
+  }
+  throw lastError
+}
+
 const [, , packageName, packageFolder, ...args] = process.argv
 
 if (!packageName) {
@@ -50,138 +98,219 @@ if (!packageFolder) {
 }
 
 const dryRun = args.includes("--dry-run")
+const debug = args.includes("--debug")
+if (debug) process.env.DEBUG = "true"
 
-logBoxed(`Publishing ${packageName} ${chalk.green(`v${version}-dev`)}`)
+let originalPackageJson: any = null
 let gitShortHash: string | null = null
-try {
-  gitShortHash = (await $`git rev-parse --short HEAD`.text()).trim()
-} catch {}
+let newDevVersion: string | null = null
 
-console.log(gitShortHash)
-
-if (!gitShortHash) {
-  logError("Failed to get git short hash")
-  process.exit(1)
-}
-
-logInfo(`Checking latest dev version of ${chalk.blue(packageName)}...`)
-let previousDevVersion: string | null = null
-
-try {
-  previousDevVersion = (
-    await $`npm view ${packageName}@dev version`.text()
-  ).trim()
-} catch {}
-
-if (previousDevVersion) {
-  logInfo(
-    `Latest dev version of ${chalk.blue(packageName)} is ${chalk.green(
-      previousDevVersion,
-    )}`,
-  )
-
-  const latestDevVersionHash = previousDevVersion.split(".").at(-1)
-  if (latestDevVersionHash === gitShortHash) {
-    logWarning(`No new version found, skipping publish.`)
-    process.exit(0)
+const cleanup = async () => {
+  if (originalPackageJson && packageFolder) {
+    logInfo("Restoring original package.json...")
+    try {
+      await Bun.write(
+        `${packageFolder}/package.json`,
+        JSON.stringify(originalPackageJson, null, 2)
+      )
+      logSuccess("Restored original package.json")
+    } catch (error) {
+      logError("Failed to restore original package.json:", error)
+    }
   }
 }
 
-const timestamp = Date.now()
-const newDevVersion = `${version}-dev.${timestamp}.${gitShortHash}`
+process.on("SIGINT", async () => {
+  logWarning("Process interrupted, cleaning up...")
+  await cleanup()
+  process.exit(1)
+})
 
-newLine()
-logBoxed(
-  `Publishing New ${packageName}@dev version: ${chalk.green(`v${newDevVersion}`)}`,
-)
+process.on("uncaughtException", async (error) => {
+  logError("Uncaught exception:", error instanceof Error ? error.message : String(error))
+  await cleanup()
+  process.exit(1)
+})
 
-logInfo("Installing dependencies...")
-await $`bun i --frozen-lockfile`
-logSuccess("Dependencies installed.")
-newLine()
+// Main execution
+try {
+  logBoxed(`Publishing ${packageName} ${chalk.green(`v${version}-dev`)}`)
 
-logBoxed(`Publishing ${chalk.blue(packageName)}`)
+  // Check npm authentication
+  logInfo("Checking npm authentication...")
+  const isAuthenticated = await checkNpmAuth()
+  if (!isAuthenticated) {
+    throw new Error("Not authenticated with npm. Please run 'npm login' first.")
+  }
+  logSuccess("npm authentication verified")
 
-// Deprecate the old version
-if (previousDevVersion) {
-  logInfo(
-    `Existing dev version found, deprecating old dev version ${chalk.yellow(
-      previousDevVersion,
-    )}...`,
-  )
+  // Get git hash
   try {
-    if (!dryRun)
-      await $`npm deprecate ${packageName}@${previousDevVersion} "no longer supported"`
-
-    logSuccess(
-      `Successfully deprecated ${chalk.yellow(`${packageName}@${previousDevVersion}`)}`,
-    )
-  } catch {
-    logError(
-      `Failed to deprecate ${chalk.yellow(`${packageName}@${previousDevVersion}`)}`,
-    )
-  }
-}
-newLine()
-
-// Build package
-logInfo(`Building ${chalk.blue(packageName)}...`)
-await $`bun run build --scope=${packageName} --no-deps --include-dependencies`
-logSuccess(`Built ${chalk.blue(packageName)}`)
-newLine()
-
-// Update package version
-logInfo(
-  `Updating ${chalk.blue(packageName)} version to ${chalk.green(
-    `v${newDevVersion}`,
-  )}`,
-)
-
-const packageJsonPath = `${packageFolder}/package.json`
-
-if (!dryRun) {
-  const packageJson = await Bun.file(packageJsonPath).json()
-  packageJson.version = newDevVersion
-
-  packageJson.dependencies = updateLocalDeps(
-    packageJson.dependencies,
-    newDevVersion,
-  )
-  packageJson.devDependencies = updateLocalDeps(
-    packageJson.devDependencies,
-    newDevVersion,
-  )
-
-  await Bun.write(packageJsonPath, JSON.stringify(packageJson, null, 2))
-} else {
-  logInfo(`Dry run: Would have updated version to ${newDevVersion}`)
-}
-
-logSuccess(
-  `Updated ${chalk.blue(packageName)} version to ${chalk.green(
-    `v${newDevVersion}`,
-  )}`,
-)
-
-// Publish package
-logInfo(`Publishing ${chalk.blue(packageName)} to NPM...`)
-try {
-  if (!dryRun) {
-    await $`cd ${packageFolder} && npm publish --no-git-checks --tag dev --access public`
-  } else {
-    logInfo(`Dry run: Would have published ${packageName}@${newDevVersion}`)
+    gitShortHash = (await $`git rev-parse --short HEAD`.text()).trim()
+    logDebug(`Git short hash: ${gitShortHash}`)
+  } catch (error) {
+    throw new Error(`Failed to get git short hash: ${error}`)
   }
 
-  logSuccess(`Published ${chalk.green(`${packageName}@${newDevVersion}`)}`)
+  if (!gitShortHash) {
+    throw new Error("Failed to get git short hash")
+  }
+
+  // Check previous version
+  logInfo(`Checking latest dev version of ${chalk.blue(packageName)}...`)
+  let previousDevVersion: string | null = null
+
+  try {
+    previousDevVersion = (
+      await retryOperation(
+        () => $`npm view ${packageName}@dev version`.text(),
+        "npm view"
+      )
+    ).trim()
+  } catch {}
+
+  if (previousDevVersion) {
+    logInfo(
+      `Latest dev version of ${chalk.blue(packageName)} is ${chalk.green(
+        previousDevVersion
+      )}`
+    )
+
+    const latestDevVersionHash = previousDevVersion.split(".").at(-1)
+    if (latestDevVersionHash === gitShortHash) {
+      logWarning(`No new version found, skipping publish.`)
+      process.exit(0)
+    }
+  }
+
+  const timestamp = Date.now()
+  newDevVersion = `${version}-dev.${timestamp}.${gitShortHash}`
+  validateVersion(newDevVersion)
+
+  newLine()
+  logBoxed(
+    `Publishing New ${packageName}@dev version: ${chalk.green(
+      `v${newDevVersion}`
+    )}`
+  )
+
+  // Install dependencies
+  logInfo("Installing dependencies...")
+  await retryOperation(
+    () => $`bun i --frozen-lockfile`,
+    "bun install"
+  )
+  logSuccess("Dependencies installed.")
+  newLine()
+
+  logBoxed(`Publishing ${chalk.blue(packageName)}`)
+
+  // Deprecate old version
+  if (previousDevVersion) {
+    logInfo(
+      `Existing dev version found, deprecating old dev version ${chalk.yellow(
+        previousDevVersion
+      )}...`
+    )
+    try {
+      if (!dryRun) {
+        await retryOperation(
+          () =>
+            $`npm deprecate ${packageName}@${previousDevVersion} "no longer supported"`,
+          "npm deprecate"
+        )
+        logSuccess(
+          `Successfully deprecated ${chalk.yellow(
+            `${packageName}@${previousDevVersion}`
+          )}`
+        )
+      }
+    } catch (error) {
+      logWarning(
+        `Failed to deprecate ${chalk.yellow(
+          `${packageName}@${previousDevVersion}`
+        )}: ${error}`
+      )
+    }
+  }
+  newLine()
+
+  // Build package
+  logInfo(`Building ${chalk.blue(packageName)}...`)
+  await retryOperation(
+    () => $`bun run build --scope=${packageName} --no-deps --include-dependencies`,
+    "build"
+  )
+  logSuccess(`Built ${chalk.blue(packageName)}`)
+  newLine()
+
+  // Update package version
   logInfo(
-    `View package at ${chalk.gray(`https://npmjs.com/package/${packageName}`)}`,
+    `Updating ${chalk.blue(packageName)} version to ${chalk.green(
+      `v${newDevVersion}`
+    )}`
   )
-} catch {
-  logError(
-    `Failed to publish ${chalk.yellow(`${packageName}@${newDevVersion}`)}`,
+
+  const packageJsonPath = `${packageFolder}/package.json`
+
+  if (!dryRun) {
+    // Backup original package.json
+    originalPackageJson = await Bun.file(packageJsonPath).json()
+    
+    const packageJson = { ...originalPackageJson }
+    packageJson.version = newDevVersion
+
+    packageJson.dependencies = updateLocalDeps(
+      packageJson.dependencies,
+      newDevVersion
+    )
+    packageJson.devDependencies = updateLocalDeps(
+      packageJson.devDependencies,
+      newDevVersion
+    )
+
+    await Bun.write(packageJsonPath, JSON.stringify(packageJson, null, 2))
+  } else {
+    logInfo(`Dry run: Would have updated version to ${newDevVersion}`)
+  }
+
+  logSuccess(
+    `Updated ${chalk.blue(packageName)} version to ${chalk.green(
+      `v${newDevVersion}`
+    )}`
   )
+
+  // Publish package
+  logInfo(`Publishing ${chalk.blue(packageName)} to NPM...`)
+  try {
+    if (!dryRun) {
+      await retryOperation(
+        () =>
+          $`cd ${packageFolder} && npm publish --no-git-checks --tag dev --access public`,
+        "npm publish"
+      )
+    } else {
+      logInfo(`Dry run: Would have published ${packageName}@${newDevVersion}`)
+    }
+
+    logSuccess(`Published ${chalk.green(`${packageName}@${newDevVersion}`)}`)
+    logInfo(
+      `View package at ${chalk.gray(
+        `https://npmjs.com/package/${packageName}`
+      )}`
+    )
+  } catch (error) {
+    throw new Error(
+      `Failed to publish ${chalk.yellow(
+        `${packageName}@${newDevVersion}`
+      )}: ${error}`
+    )
+  }
+  newLine()
+
+  logBoxed(`Successfully published Arona ${chalk.green(`v${newDevVersion}`)}`)
+} catch (error) {
+  logError(error instanceof Error ? error.message : String(error))
+  await cleanup()
   process.exit(1)
 }
-newLine()
-
-logBoxed(`Successfully published Reaccord ${chalk.green(`v${newDevVersion}`)}`)

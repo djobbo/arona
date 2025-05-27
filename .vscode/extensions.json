@@ -1,9 +1,8 @@
 {
-  "recommendations": [
-    "github.vscode-github-actions",
-    "oven.bun-vscode",
-    "dbaeumer.vscode-eslint",
-    "astro-build.astro-vscode"
-  ],
-  "unwantedRecommendations": []
+	"recommendations": [
+		"github.vscode-github-actions",
+		"oven.bun-vscode",
+		"astro-build.astro-vscode",
+		"biomejs.biome"
+	]
 }

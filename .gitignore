@@ -177,5 +177,5 @@ dist
 # Turborepo
 .turbo
 
-# Reaccord libs output
-lib
+# Arona libs output
+dist

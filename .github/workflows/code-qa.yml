@@ -9,13 +9,11 @@ jobs:
       matrix:
         include:
           - name: Lint
-            action: bun run check:lint
+            action: bun run check:lint:all
           - name: Typecheck
-            action: bun run check:types
+            action: bun run check:types:all
           - name: Deadcode
             action: bun run check:deadcode
-          - name: Circular Dependencies
-            action: bun run check:circular-deps
           - name: Mismatched Dependencies
             action: bun run check:mismatched-deps
           - name: Test

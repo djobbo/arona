@@ -1,0 +1,58 @@
+{
+	"name": "@arona/discord",
+	"description": "Discord integration for Arona",
+	"version": "0.0.0-dev",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/djobbo/arona.git"
+	},
+	"license": "MIT",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"type": "module",
+	"private": true,
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"require": "./dist/index.cjs",
+			"import": "./dist/index.js"
+		},
+		"./cli": {
+			"types": "./dist/cli.d.ts",
+			"require": "./dist/cli.cjs",
+			"import": "./dist/cli.js"
+		}
+	},
+	"bin": {
+		"arona": "./bin/cli.js"
+	},
+	"scripts": {
+		"build": "tsup --entry.index src/index.ts --format esm,cjs --dts",
+		"dev": "tsup --entry.index src/index.ts --format esm,cjs --dts --watch",
+		"generate": "bun run src/commands/generators/command-builder.ts",
+		"lint": "biome check --write",
+		"check:lint": "biome check",
+		"check:types": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@types/bun": "latest",
+		"@types/react": "18.3.0",
+		"tsup": "^8.5.0"
+	},
+	"peerDependencies": {
+		"typescript": "^5.8.3"
+	},
+	"dependencies": {
+		"@arona/core": "workspace:*",
+		"@resvg/resvg-js": "^2.6.2",
+		"@typescript/native-preview": "^7.0.0-dev.20250522.2",
+		"discord.js": "^14.19.3",
+		"dotenv": "^16.5.0",
+		"react": "18.3.0",
+		"satori": "^0.13.1",
+		"ts-morph": "^25.0.1",
+		"zlib-sync": "^0.1.10"
+	}
+}
