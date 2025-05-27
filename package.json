@@ -26,7 +26,8 @@
 		"lint:all": "bunx --bun turbo run lint",
 		"check:lint": "biome check",
 		"check:lint:all": "bunx --bun turbo run check:lint",
-		"check:deadcode": "knip-bun"
+		"check:deadcode": "knip-bun",
+		"test": "turbo run test"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
