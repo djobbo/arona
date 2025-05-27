@@ -1,6 +1,6 @@
 # {{projectName}}
 
-This project was created using [create-arona-app](https://github.com/djobbo/reaccord).
+This project was created using [create-arona-app](https://github.com/djobbo/arona).
 
 ## Getting Started
 

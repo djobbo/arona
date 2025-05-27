@@ -16,7 +16,6 @@
 	},
 	"dependencies": {
 		"@arona/discord": "workspace:*",
-		"@fontsource/roboto": "^5.2.5",
 		"@fontsource/slackey": "^5.2.5"
 	}
 }

@@ -308,7 +308,7 @@ try {
   }
   newLine()
 
-  logBoxed(`Successfully published Reaccord ${chalk.green(`v${newDevVersion}`)}`)
+  logBoxed(`Successfully published Arona ${chalk.green(`v${newDevVersion}`)}`)
 } catch (error) {
   logError(error instanceof Error ? error.message : String(error))
   await cleanup()

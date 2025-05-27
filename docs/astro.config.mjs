@@ -9,12 +9,12 @@ export default defineConfig({
   integrations: [
       starlight({
           title: 'Arona Documentation',
-          social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/djobbo/reaccord' }],
+          social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/djobbo/arona' }],
           sidebar: [
               {
                   label: 'Guides',
                   items: [
-                      { label: 'Getting Started', slug: 'guides/getting-started' },
+                      { label: 'Overview', slug: 'guides/overview' },
                   ],
               },
               {
