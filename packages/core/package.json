@@ -16,10 +16,15 @@
 			"types": "./dist/index.d.ts",
 			"require": "./dist/index.cjs",
 			"import": "./dist/index.js"
+		},
+		"./cli": {
+			"types": "./dist/cli.d.ts",
+			"require": "./dist/cli.cjs",
+			"import": "./dist/cli.js"
 		}
 	},
 	"bin": {
-		"arona": "./dist/cli.js"
+		"arona": "./bin/cli.js"
 	},
 	"scripts": {
 		"build": "tsup --entry.index src/index.ts --entry.cli src/cli/index.ts --format esm,cjs --dts",

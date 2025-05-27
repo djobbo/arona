@@ -7,7 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"ignore": ["node_modules", ".turbo", ".github"],
+		"ignore": ["node_modules", ".turbo", ".github", "bun.lock"],
 		"include": [".vscode/*", "turbo.json", "biome.json", "package.json"]
 	},
 	"formatter": {
