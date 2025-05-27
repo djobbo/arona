@@ -1,6 +1,11 @@
 {
 	"name": "@arona/core",
 	"version": "0.0.0-dev",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/djobbo/arona.git"
+	},
+	"license": "MIT",
 	"main": "./dist/index.cjs",
 	"module": "./dist/index.js",
 	"types": "./dist/index.d.ts",

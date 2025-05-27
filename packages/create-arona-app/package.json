@@ -1,6 +1,11 @@
 {
 	"name": "create-arona-app",
 	"version": "0.0.0-dev",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/djobbo/arona.git"
+	},
+	"license": "MIT",
 	"description": "Create a new Arona app with a single command",
 	"type": "module",
 	"bin": {
@@ -9,8 +14,7 @@
 	"files": ["bin", "templates"],
 	"scripts": {
 		"build": "bun run scripts/copy-templates.ts",
-		"prepublishOnly": "npm run build",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"prepublishOnly": "bun run build"
 	},
 	"keywords": ["arona", "create-arona-app", "scaffold", "template"],
 	"author": "",

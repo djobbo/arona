@@ -26,14 +26,6 @@
 		"dev": {
 			"persistent": true,
 			"cache": false
-		},
-		"pkg:update": {
-			"dependsOn": ["^pkg:update"],
-			"outputs": []
-		},
-		"//#pkg:update": {
-			"dependsOn": [],
-			"outputs": []
 		}
 	}
 }

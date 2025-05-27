@@ -1,9 +1,14 @@
 {
 	"name": "arona",
 	"version": "0.0.1",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/djobbo/arona.git"
+	},
+	"license": "MIT",
 	"private": true,
 	"type": "module",
-	"packageManager": "bun@1.2.13",
+	"packageManager": "bun@1.2.14",
 	"workspaces": ["examples/*", "packages/*", "docs"],
 	"scripts": {
 		"ci:install": "bun install --frozen-lockfile",
