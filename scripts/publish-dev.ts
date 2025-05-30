@@ -9,7 +9,6 @@ const PLACEHOLDER_VERSION = "0.0.0-dev"
 const MAX_RETRIES = 3
 const RETRY_DELAY = 2000 // 2 seconds
 
-// Logging utilities
 const logInfo = (...args: string[]) =>
   console.log(chalk.gray("[Info]"), ...args)
 const logSuccess = (...args: string[]) =>
@@ -45,7 +44,7 @@ const updateLocalDeps = (deps: Record<string, string>, newVersion: string) =>
   )
 
 const validateVersion = (version: string) => {
-  const semverRegex = /^\d+\.\d+\.\d+(-dev\.\d+\.\w+)?$/
+  const semverRegex = /^\d+\.\d+\.\d+(-dev\.\w+)?$/
   if (!semverRegex.test(version)) {
     throw new Error(`Invalid version format: ${version}`)
   }
@@ -184,7 +183,7 @@ try {
   }
 
   const timestamp = Date.now()
-  newDevVersion = `${version}-dev.${timestamp}.${gitShortHash}`
+  newDevVersion = `${version}-dev.${gitShortHash}`
   validateVersion(newDevVersion)
 
   newLine()
@@ -235,15 +234,6 @@ try {
   }
   newLine()
 
-  // Build package
-  logInfo(`Building ${chalk.blue(packageName)}...`)
-  await retryOperation(
-    () => $`bun run build --scope=${packageName} --no-deps --include-dependencies`,
-    "build"
-  )
-  logSuccess(`Built ${chalk.blue(packageName)}`)
-  newLine()
-
   // Update package version
   logInfo(
     `Updating ${chalk.blue(packageName)} version to ${chalk.green(
@@ -252,6 +242,15 @@ try {
   )
 
   const packageJsonPath = `${packageFolder}/package.json`
+
+  // Build package
+  logInfo(`Building ${chalk.blue(packageName)}...`)
+  await retryOperation(
+    () => $`bunx turbo run build --filter=${packageName}`,
+    "build"
+  )
+  logSuccess(`Built ${chalk.blue(packageName)}`)
+  newLine()
 
   if (!dryRun) {
     // Backup original package.json

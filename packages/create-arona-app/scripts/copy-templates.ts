@@ -41,6 +41,16 @@ async function updatePackageReadme(templates: string[]) {
   await fs.writeFile(PACKAGE_README, updatedReadme);
 }
 
+async function updateTemplatePackageJson(templatePath: string) {
+  const packageJsonPath = join(templatePath, 'package.json');
+  const packageJson = await fs.readJson(packageJsonPath);
+  
+  if (packageJson.dependencies && packageJson.dependencies['@arona/discord']) {
+    packageJson.dependencies['@arona/discord'] = '0.0.0-dev';
+    await fs.writeJson(packageJsonPath, packageJson, { spaces: '\t' });
+  }
+}
+
 async function copyTemplates() {
   try {
     // Remove existing templates directory
@@ -64,8 +74,10 @@ async function copyTemplates() {
     const templates = await fs.readdir(TEMPLATES_DIR);
     const templateContent = await fs.readFile(join(__dirname, 'readme-template.md'), 'utf-8');
     for (const template of templates) {
-      const readmePath = join(TEMPLATES_DIR, template, 'README.md');
+      const templatePath = join(TEMPLATES_DIR, template);
+      const readmePath = join(templatePath, 'README.md');
       await fs.writeFile(readmePath, templateContent);
+      await updateTemplatePackageJson(templatePath);
     }
 
     // Update package README with available templates
