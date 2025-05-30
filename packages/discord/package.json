@@ -11,7 +11,6 @@
 	"module": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"type": "module",
-	"private": true,
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
@@ -25,7 +24,7 @@
 		}
 	},
 	"bin": {
-		"arona": "./bin/cli.js"
+		"arona": "bin/cli.js"
 	},
 	"scripts": {
 		"build": "tsup --entry.index src/index.ts --format esm,cjs --dts",

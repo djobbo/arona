@@ -272,6 +272,11 @@ try {
         "npm publish"
       )
     } else {
+      await retryOperation(
+        () =>
+          $`cd ${packageFolder} && npm publish --dry-run --no-git-checks --tag dev --access public`,
+        "npm publish"
+      )
       logInfo(`Dry run: Would have published ${packageName}@${newDevVersion}`)
     }
 

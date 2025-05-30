@@ -9,7 +9,7 @@
 	"description": "Create a new Arona app with a single command",
 	"type": "module",
 	"bin": {
-		"create-arona-app": "./bin/create-arona-app.js"
+		"create-arona-app": "bin/create-arona-app.js"
 	},
 	"files": ["bin", "templates"],
 	"scripts": {
