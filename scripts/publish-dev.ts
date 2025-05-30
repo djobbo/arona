@@ -50,15 +50,6 @@ const validateVersion = (version: string) => {
   }
 }
 
-const checkNpmAuth = async () => {
-  try {
-    await $`npm whoami`
-    return true
-  } catch {
-    return false
-  }
-}
-
 const retryOperation = async <T>(
   operation: () => Promise<T>,
   operationName: string,
@@ -134,14 +125,6 @@ process.on("uncaughtException", async (error) => {
 // Main execution
 try {
   logBoxed(`Publishing ${packageName} ${chalk.green(`v${version}-dev`)}`)
-
-  // Check npm authentication
-  logInfo("Checking npm authentication...")
-  const isAuthenticated = await checkNpmAuth()
-  if (!isAuthenticated) {
-    throw new Error("Not authenticated with npm. Please run 'npm login' first.")
-  }
-  logSuccess("npm authentication verified")
 
   // Get git hash
   try {
