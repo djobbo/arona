@@ -103,7 +103,7 @@ file.addClass({
 	name: "SlashCommandBuilder",
 	extends: "DJSSlashCommandBuilder",
 	isExported: true,
-	typeParameters: [{ name: "Params", default: "{}" }],
+	typeParameters: [{ name: "Params" }],
 	properties: [
 		{
 			name: "params",
@@ -188,7 +188,7 @@ file.addClass({
 file.addInterface({
 	name: "SlashCommandInteraction",
 	isExported: true,
-	typeParameters: [{ name: "Params", default: "{}" }],
+	typeParameters: [{ name: "Params" }],
 	extends: ["ChatInputCommandInteraction"],
 	properties: [
 		{
@@ -201,7 +201,7 @@ file.addInterface({
 file.addFunction({
 	name: "getTypedInteraction",
 	isExported: true,
-	typeParameters: [{ name: "Params", default: "{}" }],
+	typeParameters: [{ name: "Params" }],
 	parameters: [
 		{
 			name: "command",
@@ -235,7 +235,7 @@ file.addFunction({
       {} as Record<string, unknown>,
     )
   
-    ;(interaction as SlashCommandInteraction).params = params
+    ;(interaction as SlashCommandInteraction<Params>).params = params as Params
     return interaction as SlashCommandInteraction<Params>
   `,
 })

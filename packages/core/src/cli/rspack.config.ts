@@ -1,8 +1,6 @@
-import type { Configuration } from "@rspack/core"
+import type { Configuration, Plugin } from "@rspack/core"
 import { rspack } from "@rspack/core"
-import type { ExternalItemFunctionData } from "@rspack/core"
 import ReactRefreshPlugin from "@rspack/plugin-react-refresh"
-import nodeExternals from "webpack-node-externals"
 
 export interface RspackConfigOptions {
 	entry: string
@@ -18,8 +16,8 @@ export const createRspackConfig = ({
 	outputFolder,
 	mode,
 	hot = false,
-}: RspackConfigOptions): Configuration => {
-	const plugins = []
+}: RspackConfigOptions) => {
+	const plugins: Plugin[] = []
 
 	if (hot) {
 		plugins.push(
@@ -28,20 +26,13 @@ export const createRspackConfig = ({
 		)
 	}
 
-	return {
+	const config: Configuration = {
 		target: "node",
 		mode,
 		entry: {
 			main: hot ? ["webpack/hot/poll?100", entry] : entry,
 		},
 		devtool: mode === "development" ? "source-map" : false,
-		externals: [
-			// Use nodeExternals to handle most node_modules
-			// @ts-expect-error - webpack-node-externals type is not compatible with rspack
-			nodeExternals({
-				allowlist: hot ? ["webpack/hot/poll"] : [],
-			}),
-		],
 		externalsPresets: {
 			node: true,
 		},
@@ -90,4 +81,6 @@ export const createRspackConfig = ({
 			extensions: [".tsx", ".ts", ".js", ".jsx", ".node"],
 		},
 	}
+
+	return config
 }
