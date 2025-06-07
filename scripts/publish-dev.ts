@@ -165,7 +165,6 @@ try {
     }
   }
 
-  const timestamp = Date.now()
   newDevVersion = `${version}-dev.${gitShortHash}`
   validateVersion(newDevVersion)
 
@@ -186,36 +185,6 @@ try {
   newLine()
 
   logBoxed(`Publishing ${chalk.blue(packageName)}`)
-
-  // Deprecate old version
-  if (previousDevVersion) {
-    logInfo(
-      `Existing dev version found, deprecating old dev version ${chalk.yellow(
-        previousDevVersion
-      )}...`
-    )
-    try {
-      if (!dryRun) {
-        await retryOperation(
-          () =>
-            $`npm deprecate ${packageName}@${previousDevVersion} "no longer supported"`,
-          "npm deprecate"
-        )
-        logSuccess(
-          `Successfully deprecated ${chalk.yellow(
-            `${packageName}@${previousDevVersion}`
-          )}`
-        )
-      }
-    } catch (error) {
-      logWarning(
-        `Failed to deprecate ${chalk.yellow(
-          `${packageName}@${previousDevVersion}`
-        )}: ${error}`
-      )
-    }
-  }
-  newLine()
 
   // Update package version
   logInfo(

@@ -53,6 +53,19 @@
         "typescript": "^5.8.3",
       },
     },
+    "examples/simple": {
+      "name": "@arona-ex/simple",
+      "dependencies": {
+        "@arona/discord": "0.0.0-dev",
+        "@fontsource/slackey": "^5.2.5",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5.8.3",
+      },
+    },
     "packages/core": {
       "name": "@arona/core",
       "version": "0.0.0-dev",
@@ -134,6 +147,8 @@
     "@arona-ex/default": ["@arona-ex/default@workspace:examples/default"],
 
     "@arona-ex/rick-and-morty": ["@arona-ex/rick-and-morty@workspace:examples/rick-and-morty"],
+
+    "@arona-ex/simple": ["@arona-ex/simple@workspace:examples/simple"],
 
     "@arona/core": ["@arona/core@workspace:packages/core"],
 
