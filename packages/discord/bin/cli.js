@@ -1,5 +1,5 @@
 #!/usr/bin/env node
 
-const { run } = require("@arona/core/cli")
+import { run } from "@arona/core/cli"
 
 run()

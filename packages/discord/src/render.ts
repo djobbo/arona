@@ -33,3 +33,15 @@ export const render = createRenderer<
 		messageRenderOptions,
 	)
 })
+
+export const renderMessage = async (
+	ref: InteractionRef,
+	Code: () => JSX.Element,
+	options: MessageRenderOptions = {},
+) => {
+	const rootNode = await render(Code, {
+		interactionRef: ref,
+		messageRenderOptions: options,
+	})
+	return rootNode.message
+}

@@ -55,14 +55,20 @@ export class AronaRootNode<
 	}
 
 	async initialRender(Code: () => JSX.Element) {
-		this.reconcilerInstance.updateContainer(
-			<RootNodeProvider<Props, RenderOutput> rootNode={this}>
-				<Code />
-			</RootNodeProvider>,
-			this.#rootContainer,
-		)
+		const renderPromise = new Promise((resolve) => {
+			this.reconcilerInstance.updateContainer(
+				<RootNodeProvider<Props, RenderOutput> rootNode={this}>
+					<Code />
+				</RootNodeProvider>,
+				this.#rootContainer,
+				null,
+				() => {
+					this.render().then(resolve)
+				},
+			)
+		})
 
-		await this.render()
+		return renderPromise
 	}
 
 	render = debounce(async () => {

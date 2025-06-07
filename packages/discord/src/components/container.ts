@@ -7,9 +7,13 @@ import {
 } from "discord.js"
 import type { ReactNode } from "react"
 import { topLevelComponents } from "./helpers/top-level-components"
+import type { AronaDiscordProps } from "./types"
 
 export interface ContainerProps
-	extends Omit<APIContainerComponent, "accent_color" | "components"> {
+	extends Omit<
+		AronaDiscordProps<APIContainerComponent>,
+		"accent_color" | "components"
+	> {
 	accentColor?: ColorResolvable
 	children?: ReactNode
 }

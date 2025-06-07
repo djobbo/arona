@@ -8,7 +8,7 @@ import type { ReactNode } from "react"
 import { buttonComponent } from "./button"
 
 export interface ActionRowProps {
-	children?: ReactNode
+	children: ReactNode
 }
 
 export const actionRowComponent = defineComponent({

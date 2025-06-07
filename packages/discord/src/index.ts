@@ -7,3 +7,4 @@ export * from "./commands/create-slash-command"
 export * from "./commands/helpers/reload-commands"
 
 export * from "./client"
+export * from "./render"

@@ -90,6 +90,7 @@ export class DiscordRootNode extends AronaRootNode {
 			}, this.messageRenderOptions.unmountAfter)
 		}
 		await super.initialRender(Code)
+		return this.message
 	}
 
 	protected override async performRender(): Promise<void> {

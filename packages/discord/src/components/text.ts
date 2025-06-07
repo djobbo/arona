@@ -4,8 +4,9 @@ import type { ReactNode } from "react"
 import { EMPTY_STRING } from "../constants"
 import type { AronaDiscordProps } from "./types"
 
-export interface TextProps extends AronaDiscordProps<TextDisplayComponentData> {
-	children?: ReactNode
+export interface TextProps
+	extends Omit<AronaDiscordProps<TextDisplayComponentData>, "content"> {
+	children: ReactNode
 }
 
 export const textComponent = defineComponent({

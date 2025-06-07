@@ -1,0 +1,21 @@
+{
+	"name": "@arona-ex/simple",
+	"description": "A basic Arona app setup with essential features",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"dev": "arona dev ./src/index.tsx",
+		"build": "arona build ./src/index.tsx"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5.8.3"
+	},
+	"dependencies": {
+		"@arona/discord": "0.0.0-dev",
+		"@fontsource/slackey": "^5.2.5"
+	}
+}

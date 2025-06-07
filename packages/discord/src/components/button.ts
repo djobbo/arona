@@ -1,9 +1,4 @@
-import {
-	type AronaNode,
-	defineComponent,
-	isRootNode,
-	renderTextContent,
-} from "@arona/core"
+import { type AronaNode, defineComponent, renderTextContent } from "@arona/core"
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -39,7 +34,7 @@ export interface ButtonProps extends Partial<InteractionButtonComponentData> {
 	 */
 	onClick?: (interaction: ButtonInteraction) => unknown | Promise<unknown>
 	style?: Exclude<InteractionButtonComponentData["style"], ButtonStyle.Link>
-	children?: ReactNode
+	children: ReactNode
 }
 
 const renderBaseButton = (node: AronaNode<ButtonProps>) => {
