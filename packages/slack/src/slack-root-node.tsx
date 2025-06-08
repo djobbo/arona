@@ -1,21 +1,13 @@
-import { AronaNode, AronaRootNode, type ReconcilerInstance } from "@arona/core"
+import { AronaRootNode, type ReconcilerInstance } from "@arona/core"
 import { renderComponentNodes } from "@arona/core"
-import { BaseInteraction, Message, MessageFlags } from "discord.js"
-import type { Interaction } from "discord.js"
-import type { FiberRoot } from "react-reconciler"
-import type { DiscordClient } from "./client"
+import type { SlackClient } from "./client"
 import { containerComponent } from "./components/container"
 import { topLevelComponents } from "./components/helpers/top-level-components"
-import { modalComponent } from "./components/modal"
-import type { ModalComponent } from "./components/modal"
-import type { ModalInteractionRef } from "./components/modal"
 import { EMPTY_STRING } from "./constants"
 import type { InteractionRef } from "./render"
-
-const MESSAGE_FLAGS = MessageFlags.IsComponentsV2
+import {type ChatPostMessageResponse as Message} from '@slack/web-api'
 
 export interface MessageRenderOptions {
-	ephemeral?: boolean
 	unmountAfter?: number
 }
 
@@ -24,57 +16,49 @@ const renderRootComponents = renderComponentNodes([
 	...topLevelComponents,
 ])
 
-export class DiscordRootNode extends AronaRootNode {
-	discordClient: DiscordClient
+export class SlackRootNode extends AronaRootNode {
+	slackClient: SlackClient
 	interactionRef: InteractionRef | null = null
 	message: Message | null = null
 	waitForMessageCreation: Promise<Message> | null = null
 	hydrationHooks: ((message: Message) => void)[] = []
-	#interactionListeners = new Map<
-		string,
-		(interaction: Interaction) => unknown
-	>()
-	#modalInteractionListener: ((interaction: Interaction) => unknown) | null =
-		null
+	// #interactionListeners = new Map<
+	// 	string,
+	// 	(interaction: Interaction) => unknown
+	// >()
 	messageRenderOptions: MessageRenderOptions = {}
 	lastMessageUpdatePromise: Promise<Message> | null = null
 	#unmountTimeout: Timer | null = null
-	#modalContainer: FiberRoot | null = null
-	#modalRoot: AronaNode | null = null
 
 	constructor(
+		slackClient: SlackClient,
 		reconcilerInstance: ReconcilerInstance,
 		interactionRef: InteractionRef,
 		messageRenderOptions: MessageRenderOptions,
 	) {
 		super(reconcilerInstance, [])
-		// @ts-expect-error client is AronaClient
-		this.discordClient = interactionRef.client
+		this.slackClient = slackClient
 		this.interactionRef = interactionRef
 		this.messageRenderOptions = messageRenderOptions
-		this.discordClient.addRoot(this)
+		this.slackClient.addRoot(this)
 	}
 
 	override unmount() {
 		super.unmount()
-		this.#interactionListeners.clear()
-		this.discordClient.removeRoot(this.uuid)
-		this.#modalInteractionListener = null
+		// this.#interactionListeners.clear()
+		this.slackClient.removeRoot(this.uuid)
 		this.#unmountTimeout && clearTimeout(this.#unmountTimeout)
-		if (this.#modalContainer) {
-			this.reconcilerInstance.updateContainer(null, this.#modalContainer)
-		}
 	}
 
-	interactionListener(interaction: Interaction) {
-		if (this.unmounted || !this.message) return
-		if (!("customId" in interaction)) return
+	// interactionListener(interaction: Interaction) {
+	// 	if (this.unmounted || !this.message) return
+	// 	if (!("customId" in interaction)) return
 
-		const listener = this.#interactionListeners.get(interaction.customId)
-		listener?.(interaction)
+	// 	const listener = this.#interactionListeners.get(interaction.customId)
+	// 	listener?.(interaction)
 
-		this.#modalInteractionListener?.(interaction)
-	}
+	// 	this.#modalInteractionListener?.(interaction)
+	// }
 
 	addHydrationHook(fn: (message: Message) => void) {
 		this.hydrationHooks.push(fn)
@@ -105,11 +89,11 @@ export class DiscordRootNode extends AronaRootNode {
 		const files = content
 			.map((component) => ("files" in component ? component.files : []))
 			.flat()
-		const interactionListeners = content
-			.map((component) =>
-				"listenerEntries" in component ? component.listenerEntries : [],
-			)
-			.flat()
+		// const interactionListeners = content
+		// 	.map((component) =>
+		// 		"listenerEntries" in component ? component.listenerEntries : [],
+		// 	)
+		// 	.flat()
 		const isEmptyMessage = components.length === 0
 
 		const messageContent = {
@@ -118,7 +102,7 @@ export class DiscordRootNode extends AronaRootNode {
 			...(isEmptyMessage ? { content: EMPTY_STRING } : {}),
 		}
 
-		this.#interactionListeners = new Map(interactionListeners)
+		// this.#interactionListeners = new Map(interactionListeners)
 
 		if (!this.message) {
 			if (!this.waitForMessageCreation) {
@@ -179,45 +163,5 @@ export class DiscordRootNode extends AronaRootNode {
 		} else {
 			await this.message.edit(messageContent)
 		}
-	}
-
-	async renderModal(Code: ModalComponent, interaction: ModalInteractionRef) {
-		this.#modalRoot ??= new AronaNode("arona:__modal-root", {}, this)
-		this.#modalContainer ??= this.reconcilerInstance.createContainer(
-			this.#modalRoot,
-			1, // ConcurrentRoot
-			null,
-			false,
-			false,
-			"",
-			(error) => {
-				// console.trace("Error in modal", error)
-			},
-			null,
-		)
-
-		this.reconcilerInstance.updateContainer(
-			<Code interaction={interaction} />,
-			this.#modalContainer,
-			null,
-			() => {
-				if (!this.#modalRoot) return
-				const modalNode = this.#modalRoot.children[0]
-				if (!modalNode) return
-				this.handleModalRender(modalNode, interaction)
-			},
-		)
-	}
-
-	protected handleModalRender(
-		modalNode: AronaNode,
-		interaction: ModalInteractionRef,
-	) {
-		const modal = modalComponent.render(modalNode)
-		this.#modalInteractionListener =
-			modal.interactionListeners?.[0]?.[1] ?? null
-		if (!modal.components[0]) return
-
-		interaction.showModal(modal.components[0].toJSON())
 	}
 }

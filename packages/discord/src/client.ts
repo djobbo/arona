@@ -4,7 +4,7 @@ import type { createSlashCommand } from "./commands/create-slash-command"
 import { reloadCommands } from "./commands/helpers/reload-commands"
 import type { DiscordRootNode } from "./discord-root-node"
 
-export interface AronaDiscordClientOptions extends ClientOptions {
+export interface DiscordClientOptions extends ClientOptions {
 	token: string
 	clientId: string
 	devGuildId?: string
@@ -14,7 +14,7 @@ export interface AronaDiscordClientOptions extends ClientOptions {
 	}
 }
 
-export class AronaDiscordClient extends Client {
+export class DiscordClient extends Client {
 	#token: string
 	#devGuildId?: string
 	#clientId: string
@@ -29,7 +29,7 @@ export class AronaDiscordClient extends Client {
 		devGuildId,
 		clientId,
 		...options
-	}: AronaDiscordClientOptions) {
+	}: DiscordClientOptions) {
 		console.log("🌱 Initializing Arona...")
 		super(options)
 
@@ -88,7 +88,7 @@ export class AronaDiscordClient extends Client {
 		return this
 	}
 
-	removeInteractionListener(uuid: string) {
+	removeRoot(uuid: string) {
 		this.#interactionRoots.delete(uuid)
 		return this
 	}
