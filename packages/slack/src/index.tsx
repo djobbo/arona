@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { SlackClient } from "./client"
-import { Actions, Button, Divider } from "./components"
+import { Actions, Button, Divider, Section, Text } from "./components"
 import { renderMessage } from "./render"
 
 // Initialize your app with your bot token and app token
@@ -16,6 +16,14 @@ app.message(/hi/i, async ({ message }) => {
 		const [count, setCount] = useState(0)
 		return (
 			<>
+				<Section
+					accessory={
+						<Button onClick={() => console.log("clicked")}>Click me</Button>
+					}
+				>
+					<Text>Hello {count}</Text>
+				</Section>
+				<Text>Hello {count}</Text>
 				<Button>{count}</Button>
 				<Divider />
 				<Actions>

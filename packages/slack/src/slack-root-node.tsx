@@ -102,7 +102,6 @@ export class SlackRootNode extends AronaRootNode {
 				"listenerEntries" in component ? component.listenerEntries : [],
 			)
 			.flat()
-		const isEmptyMessage = components.length === 0
 
 		this.#interactionListeners = new Map(interactionListeners)
 
