@@ -3,7 +3,7 @@ import { renderComponentNodes } from "@arona/core"
 import { BaseInteraction, Message, MessageFlags } from "discord.js"
 import type { Interaction } from "discord.js"
 import type { FiberRoot } from "react-reconciler"
-import type { AronaDiscordClient } from "./client"
+import type { DiscordClient } from "./client"
 import { containerComponent } from "./components/container"
 import { topLevelComponents } from "./components/helpers/top-level-components"
 import { modalComponent } from "./components/modal"
@@ -25,7 +25,7 @@ const renderRootComponents = renderComponentNodes([
 ])
 
 export class DiscordRootNode extends AronaRootNode {
-	discordClient: AronaDiscordClient
+	discordClient: DiscordClient
 	interactionRef: InteractionRef | null = null
 	message: Message | null = null
 	waitForMessageCreation: Promise<Message> | null = null
@@ -58,7 +58,7 @@ export class DiscordRootNode extends AronaRootNode {
 	override unmount() {
 		super.unmount()
 		this.#interactionListeners.clear()
-		this.discordClient.removeInteractionListener(this.uuid)
+		this.discordClient.removeRoot(this.uuid)
 		this.#modalInteractionListener = null
 		this.#unmountTimeout && clearTimeout(this.#unmountTimeout)
 		if (this.#modalContainer) {
