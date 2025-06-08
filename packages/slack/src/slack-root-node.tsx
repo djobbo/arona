@@ -1,20 +1,28 @@
 import { AronaRootNode, type ReconcilerInstance } from "@arona/core"
 import { renderComponentNodes } from "@arona/core"
+import type { ChatPostMessageResponse as Message } from "@slack/web-api"
 import type { SlackClient } from "./client"
-import { containerComponent } from "./components/container"
 import { topLevelComponents } from "./components/helpers/top-level-components"
-import { EMPTY_STRING } from "./constants"
 import type { InteractionRef } from "./render"
-import {type ChatPostMessageResponse as Message} from '@slack/web-api'
+import type { InteractionListener } from "./types"
+
+type WithAronaContext<T> = T & {
+	arona: {
+		client: SlackClient
+	}
+}
+
+export const hasAronaContext = (
+	ref: InteractionRef,
+): ref is WithAronaContext<InteractionRef> => {
+	return "arona" in ref
+}
 
 export interface MessageRenderOptions {
 	unmountAfter?: number
 }
 
-const renderRootComponents = renderComponentNodes([
-	containerComponent,
-	...topLevelComponents,
-])
+const renderRootComponents = renderComponentNodes([...topLevelComponents])
 
 export class SlackRootNode extends AronaRootNode {
 	slackClient: SlackClient
@@ -22,22 +30,22 @@ export class SlackRootNode extends AronaRootNode {
 	message: Message | null = null
 	waitForMessageCreation: Promise<Message> | null = null
 	hydrationHooks: ((message: Message) => void)[] = []
-	// #interactionListeners = new Map<
-	// 	string,
-	// 	(interaction: Interaction) => unknown
-	// >()
+	#interactionListeners = new Map<string, InteractionListener>()
 	messageRenderOptions: MessageRenderOptions = {}
 	lastMessageUpdatePromise: Promise<Message> | null = null
 	#unmountTimeout: Timer | null = null
 
 	constructor(
-		slackClient: SlackClient,
 		reconcilerInstance: ReconcilerInstance,
 		interactionRef: InteractionRef,
 		messageRenderOptions: MessageRenderOptions,
 	) {
 		super(reconcilerInstance, [])
-		this.slackClient = slackClient
+		if (!hasAronaContext(interactionRef)) {
+			throw new Error("Interaction ref is not an Arona interaction ref")
+		}
+
+		this.slackClient = interactionRef.arona.client
 		this.interactionRef = interactionRef
 		this.messageRenderOptions = messageRenderOptions
 		this.slackClient.addRoot(this)
@@ -45,20 +53,20 @@ export class SlackRootNode extends AronaRootNode {
 
 	override unmount() {
 		super.unmount()
-		// this.#interactionListeners.clear()
+		this.#interactionListeners.clear()
 		this.slackClient.removeRoot(this.uuid)
 		this.#unmountTimeout && clearTimeout(this.#unmountTimeout)
 	}
 
-	// interactionListener(interaction: Interaction) {
-	// 	if (this.unmounted || !this.message) return
-	// 	if (!("customId" in interaction)) return
+	interactionListener: InteractionListener = async (payload) => {
+		if (this.unmounted || !this.message) return
+		if (!("action_id" in payload.payload)) return
 
-	// 	const listener = this.#interactionListeners.get(interaction.customId)
-	// 	listener?.(interaction)
+		const actionId = payload.payload.action_id
 
-	// 	this.#modalInteractionListener?.(interaction)
-	// }
+		const listener = this.#interactionListeners.get(actionId)
+		listener?.(payload)
+	}
 
 	addHydrationHook(fn: (message: Message) => void) {
 		this.hydrationHooks.push(fn)
@@ -89,48 +97,27 @@ export class SlackRootNode extends AronaRootNode {
 		const files = content
 			.map((component) => ("files" in component ? component.files : []))
 			.flat()
-		// const interactionListeners = content
-		// 	.map((component) =>
-		// 		"listenerEntries" in component ? component.listenerEntries : [],
-		// 	)
-		// 	.flat()
+		const interactionListeners = content
+			.map((component) =>
+				"listenerEntries" in component ? component.listenerEntries : [],
+			)
+			.flat()
 		const isEmptyMessage = components.length === 0
 
-		const messageContent = {
-			components,
-			files,
-			...(isEmptyMessage ? { content: EMPTY_STRING } : {}),
-		}
-
-		// this.#interactionListeners = new Map(interactionListeners)
+		this.#interactionListeners = new Map(interactionListeners)
 
 		if (!this.message) {
 			if (!this.waitForMessageCreation) {
 				const createMessageAndHydrate = async () => {
-					if (!this.interactionRef) throw new Error("No ref")
+					if (!this.interactionRef?.channel) throw new Error("No ref")
 
 					let reply: Message | null | undefined = null
 
-					if (this.interactionRef instanceof Message) {
-						reply = await this.interactionRef.reply({
-							...messageContent,
-							flags: MESSAGE_FLAGS,
-						})
-					} else if (this.interactionRef instanceof BaseInteraction) {
-						reply = await this.interactionRef
-							.reply({
-								...messageContent,
-								ephemeral: this.messageRenderOptions?.ephemeral ?? false,
-								withResponse: true,
-								flags: MESSAGE_FLAGS,
-							})
-							.then((res) => res.resource?.message)
-					} else {
-						reply = await this.interactionRef.send({
-							...messageContent,
-							flags: MESSAGE_FLAGS,
-						})
-					}
+					reply = await this.slackClient.client.chat.postMessage({
+						channel: this.interactionRef.channel,
+						thread_ts: this.interactionRef.ts,
+						blocks: components,
+					})
 
 					if (!reply) throw new Error("No message created")
 					this.message = reply
@@ -152,16 +139,13 @@ export class SlackRootNode extends AronaRootNode {
 			this.message = await this.waitForMessageCreation
 		}
 
-		if (!this.message) throw new Error("No message to update")
-		if (!this.message.editable) throw new Error("Message is not editable")
+		if (!this.message?.ts || !this.message.channel)
+			throw new Error("Message cannot be updated")
 
-		if (this.messageRenderOptions?.ephemeral) {
-			if (!(this.interactionRef instanceof BaseInteraction))
-				throw new Error("Can't send ephemeral message to non-interaction")
-
-			await this.interactionRef.editReply(messageContent)
-		} else {
-			await this.message.edit(messageContent)
-		}
+		await this.slackClient.client.chat.update({
+			channel: this.message.channel,
+			ts: this.message.ts,
+			blocks: components,
+		})
 	}
 }

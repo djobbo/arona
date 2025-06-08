@@ -1,8 +1,4 @@
-import {
-	type AronaNode,
-	defineComponent,
-	renderComponentNodes,
-} from "@arona/core"
+import { type AronaNode, defineComponent } from "@arona/core"
 import { ActionRowBuilder } from "discord.js"
 import type { ReactNode } from "react"
 import { buttonComponent } from "./button"

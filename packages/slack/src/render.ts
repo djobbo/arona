@@ -1,12 +1,8 @@
-import {type ChatPostMessageResponse as Message} from '@slack/web-api'
-
-
-export type InteractionRef =
-	| Message
+export type InteractionRef = KnownEventFromType<"message">
 
 import { createRenderer } from "@arona/core"
+import type { KnownEventFromType } from "@slack/bolt"
 import { SlackRootNode } from "./slack-root-node"
-import type { SlackClient } from './client'
 
 type MessageRenderOptions = {
 	ephemeral?: boolean
@@ -14,11 +10,10 @@ type MessageRenderOptions = {
 }
 
 export const render = createRenderer<
-SlackRootNode,
-	{ slackClient: SlackClient, interactionRef: InteractionRef; messageRenderOptions: MessageRenderOptions }
->((reconcilerInstance, { slackClient, interactionRef, messageRenderOptions }) => {
+	SlackRootNode,
+	{ interactionRef: InteractionRef; messageRenderOptions: MessageRenderOptions }
+>((reconcilerInstance, { interactionRef, messageRenderOptions }) => {
 	return new SlackRootNode(
-        slackClient,
 		reconcilerInstance,
 		interactionRef,
 		messageRenderOptions,
@@ -26,13 +21,11 @@ SlackRootNode,
 })
 
 export const renderMessage = async (
-    slackClient: SlackClient,
 	ref: InteractionRef,
 	Code: () => JSX.Element,
 	options: MessageRenderOptions = {},
 ) => {
 	const rootNode = await render(Code, {
-        slackClient,
 		interactionRef: ref,
 		messageRenderOptions: options,
 	})
