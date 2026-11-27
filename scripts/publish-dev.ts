@@ -1,272 +1,96 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
+import { execFileSync } from "node:child_process";
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
-import { $ } from "bun"
-import { version } from "../package.json"
-import chalk from "chalk"
-import stripAnsi from "strip-ansi"
+const PLACEHOLDER_VERSIONS = new Set(["0.0.0-dev", "workspace:0.0.0-dev", "workspace:*"]);
 
-const PLACEHOLDER_VERSION = "0.0.0-dev"
-const MAX_RETRIES = 3
-const RETRY_DELAY = 2000 // 2 seconds
+const [, , packageName, packageFolder, ...args] = process.argv;
 
-const logInfo = (...args: string[]) =>
-  console.log(chalk.gray("[Info]"), ...args)
-const logSuccess = (...args: string[]) =>
-  console.log(chalk.green("[Success]"), ...args)
-const logError = (...args: string[]) =>
-  console.log(chalk.red("[Error]"), ...args)
-const logWarning = (...args: string[]) =>
-  console.log(chalk.yellow("[Warning]"), ...args)
-const logDebug = (...args: string[]) =>
-  process.env.DEBUG && console.log(chalk.blue("[Debug]"), ...args)
-const logBoxed = (msg: string) => {
-  const len = stripAnsi(msg).length + 2
-  console.log("╭" + "─".repeat(len) + "╮")
-  console.log("│ " + msg + " │")
-  console.log("╰" + "─".repeat(len) + "╯")
-}
-const newLine = () => console.log()
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-
-const updateLocalDeps = (deps: Record<string, string>, newVersion: string) =>
-  Object.fromEntries(
-    Object.entries(deps || {}).map(([dep, ver]) => [
-      dep,
-      [
-        PLACEHOLDER_VERSION,
-        `workspace:${PLACEHOLDER_VERSION}`,
-        `workspace:*`,
-      ].includes(typeof ver === "string" ? ver : "")
-        ? newVersion
-        : ver,
-    ]),
-  )
-
-const validateVersion = (version: string) => {
-  const semverRegex = /^\d+\.\d+\.\d+(-dev\.\w+)?$/
-  if (!semverRegex.test(version)) {
-    throw new Error(`Invalid version format: ${version}`)
-  }
+if (!packageName || !packageFolder) {
+  console.error("Usage: vpx scripts/publish-dev.ts <package-name> <folder> [--dry-run]");
+  process.exit(1);
 }
 
-const retryOperation = async <T>(
-  operation: () => Promise<T>,
-  operationName: string,
-  maxRetries = MAX_RETRIES
-): Promise<T> => {
-  let lastError: Error | null = null
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await operation()
-    } catch (error) {
-      lastError = error as Error
-      logWarning(
-        `${operationName} failed (attempt ${i + 1}/${maxRetries}): ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      )
-      if (i < maxRetries - 1) {
-        logInfo(`Retrying in ${RETRY_DELAY / 1000} seconds...`)
-        await sleep(RETRY_DELAY)
-      }
-    }
-  }
-  throw lastError
-}
+const dryRun = args.includes("--dry-run");
+const rootPackage = JSON.parse(readFileSync("package.json", "utf8")) as {
+  version: string;
+};
+const packageJsonPath = join(packageFolder, "package.json");
+const originalPackageJson = readFileSync(packageJsonPath, "utf8");
 
-const [, , packageName, packageFolder, ...args] = process.argv
+const run = (
+  command: string,
+  commandArgs: ReadonlyArray<string>,
+  options: { capture?: boolean; cwd?: string } = {},
+) =>
+  execFileSync(command, commandArgs, {
+    cwd: options.cwd ?? process.cwd(),
+    encoding: "utf8",
+    stdio: options.capture ? ["ignore", "pipe", "ignore"] : "inherit",
+  }).trim();
 
-if (!packageName) {
-  logError("Missing package name")
-  process.exit(1)
-}
+const gitHash = run("git", ["rev-parse", "--short", "HEAD"], { capture: true });
+const devVersion = `${rootPackage.version}-dev.${gitHash}`;
 
-if (!packageFolder) {
-  logError("Missing package folder")
-  process.exit(1)
-}
-
-const dryRun = args.includes("--dry-run")
-const debug = args.includes("--debug")
-if (debug) process.env.DEBUG = "true"
-
-let originalPackageJson: any = null
-let gitShortHash: string | null = null
-let newDevVersion: string | null = null
-
-const cleanup = async () => {
-  if (originalPackageJson && packageFolder) {
-    logInfo("Restoring original package.json...")
-    try {
-      await Bun.write(
-        `${packageFolder}/package.json`,
-        JSON.stringify(originalPackageJson, null, 2)
-      )
-      logSuccess("Restored original package.json")
-    } catch (error) {
-      logError("Failed to restore original package.json:", error)
-    }
-  }
-}
-
-process.on("SIGINT", async () => {
-  logWarning("Process interrupted, cleaning up...")
-  await cleanup()
-  process.exit(1)
-})
-
-process.on("uncaughtException", async (error) => {
-  logError("Uncaught exception:", error instanceof Error ? error.message : String(error))
-  await cleanup()
-  process.exit(1)
-})
-
-// Main execution
+let previousDevVersion: string | null = null;
 try {
-  logBoxed(`Publishing ${packageName} ${chalk.green(`v${version}-dev`)}`)
+  previousDevVersion = run("npm", ["view", `${packageName}@dev`, "version"], {
+    capture: true,
+  });
+} catch {
+  // The package has no dev tag yet.
+}
 
-  // Get git hash
-  try {
-    gitShortHash = (await $`git rev-parse --short HEAD`.text()).trim()
-    logDebug(`Git short hash: ${gitShortHash}`)
-  } catch (error) {
-    throw new Error(`Failed to get git short hash: ${error}`)
-  }
+if (previousDevVersion?.split(".").at(-1) === gitHash) {
+  console.log(`No new version for ${packageName}; skipping ${devVersion}.`);
+  process.exit(0);
+}
 
-  if (!gitShortHash) {
-    throw new Error("Failed to get git short hash")
-  }
+const rewriteDependencies = (dependencies: Record<string, string> | undefined) => {
+  if (!dependencies) return undefined;
+  return Object.fromEntries(
+    Object.entries(dependencies).map(([name, version]) => [
+      name,
+      PLACEHOLDER_VERSIONS.has(version) ? devVersion : version,
+    ]),
+  );
+};
 
-  // Check previous version
-  logInfo(`Checking latest dev version of ${chalk.blue(packageName)}...`)
-  let previousDevVersion: string | null = null
+const restore = () => {
+  writeFileSync(packageJsonPath, originalPackageJson);
+};
 
-  try {
-    previousDevVersion = (
-      await retryOperation(
-        () => $`npm view ${packageName}@dev version`.text(),
-        "npm view"
-      )
-    ).trim()
-  } catch {}
-
-  if (previousDevVersion) {
-    logInfo(
-      `Latest dev version of ${chalk.blue(packageName)} is ${chalk.green(
-        previousDevVersion
-      )}`
-    )
-
-    const latestDevVersionHash = previousDevVersion.split(".").at(-1)
-    if (latestDevVersionHash === gitShortHash) {
-      logWarning(`No new version found, skipping publish.`)
-      process.exit(0)
-    }
-  }
-
-  newDevVersion = `${version}-dev.${gitShortHash}`
-  validateVersion(newDevVersion)
-
-  newLine()
-  logBoxed(
-    `Publishing New ${packageName}@dev version: ${chalk.green(
-      `v${newDevVersion}`
-    )}`
-  )
-
-  // Install dependencies
-  logInfo("Installing dependencies...")
-  await retryOperation(
-    () => $`bun i --frozen-lockfile`,
-    "bun install"
-  )
-  logSuccess("Dependencies installed.")
-  newLine()
-
-  logBoxed(`Publishing ${chalk.blue(packageName)}`)
-
-  // Update package version
-  logInfo(
-    `Updating ${chalk.blue(packageName)} version to ${chalk.green(
-      `v${newDevVersion}`
-    )}`
-  )
-
-  const packageJsonPath = `${packageFolder}/package.json`
-
-  // Build package
-  logInfo(`Building ${chalk.blue(packageName)}...`)
-  await retryOperation(
-    () => $`bunx turbo run build --filter=${packageName}`,
-    "build"
-  )
-  logSuccess(`Built ${chalk.blue(packageName)}`)
-  newLine()
+try {
+  console.log(`🔨 Building ${packageName}@${devVersion}`);
+  run("pnpm", ["install", "--frozen-lockfile"]);
+  run("pnpm", ["--filter", packageName, "build"]);
 
   if (!dryRun) {
-    // Backup original package.json
-    originalPackageJson = await Bun.file(packageJsonPath).json()
-    
-    const packageJson = { ...originalPackageJson }
-    packageJson.version = newDevVersion
-
-    packageJson.dependencies = updateLocalDeps(
-      packageJson.dependencies,
-      newDevVersion
-    )
-    packageJson.devDependencies = updateLocalDeps(
-      packageJson.devDependencies,
-      newDevVersion
-    )
-
-    await Bun.write(packageJsonPath, JSON.stringify(packageJson, null, 2))
-  } else {
-    logInfo(`Dry run: Would have updated version to ${newDevVersion}`)
+    const packageJson = JSON.parse(originalPackageJson) as {
+      version: string;
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+    packageJson.version = devVersion;
+    packageJson.dependencies = rewriteDependencies(packageJson.dependencies);
+    packageJson.devDependencies = rewriteDependencies(packageJson.devDependencies);
+    writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, "\t")}\n`);
   }
 
-  logSuccess(
-    `Updated ${chalk.blue(packageName)} version to ${chalk.green(
-      `v${newDevVersion}`
-    )}`
-  )
-
-  // Publish package
-  logInfo(`Publishing ${chalk.blue(packageName)} to NPM...`)
-  try {
-    if (!dryRun) {
-      await retryOperation(
-        () =>
-          $`cd ${packageFolder} && npm publish --no-git-checks --tag dev --access public`,
-        "npm publish"
-      )
-    } else {
-      await retryOperation(
-        () =>
-          $`cd ${packageFolder} && npm publish --dry-run --no-git-checks --tag dev --access public`,
-        "npm publish"
-      )
-      logInfo(`Dry run: Would have published ${packageName}@${newDevVersion}`)
-    }
-
-    logSuccess(`Published ${chalk.green(`${packageName}@${newDevVersion}`)}`)
-    logInfo(
-      `View package at ${chalk.gray(
-        `https://npmjs.com/package/${packageName}`
-      )}`
-    )
-  } catch (error) {
-    throw new Error(
-      `Failed to publish ${chalk.yellow(
-        `${packageName}@${newDevVersion}`
-      )}: ${error}`
-    )
-  }
-  newLine()
-
-  logBoxed(`Successfully published Arona ${chalk.green(`v${newDevVersion}`)}`)
-} catch (error) {
-  logError(error instanceof Error ? error.message : String(error))
-  await cleanup()
-  process.exit(1)
+  console.log(
+    dryRun
+      ? `🧪 Dry run: would publish ${packageName}@${devVersion}`
+      : `🚀 Publishing ${packageName}@${devVersion}`,
+  );
+  run(
+    "npm",
+    dryRun
+      ? ["publish", "--dry-run", "--tag", "dev", "--access", "public"]
+      : ["publish", "--tag", "dev", "--access", "public"],
+    { cwd: packageFolder },
+  );
+  console.log(`✅ ${packageName}@${devVersion} published`);
+} finally {
+  restore();
 }

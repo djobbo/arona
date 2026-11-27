@@ -1,21 +1,25 @@
 {
-	"name": "@arona-ex/default",
-	"description": "A basic Arona app setup with essential features",
-	"module": "index.ts",
-	"type": "module",
-	"private": true,
-	"scripts": {
-		"dev": "arona dev ./src/index.ts",
-		"build": "arona build ./src/index.ts"
-	},
-	"devDependencies": {
-		"@types/bun": "latest"
-	},
-	"peerDependencies": {
-		"typescript": "^5.8.3"
-	},
-	"dependencies": {
-		"@arona/discord": "workspace:*",
-		"@fontsource/slackey": "^5.2.5"
-	}
+  "name": "@arona-ex/default",
+  "private": true,
+  "description": "A basic Arona app setup with essential features",
+  "type": "module",
+  "module": "index.ts",
+  "scripts": {
+    "dev": "arona dev ./src/index.ts",
+    "build": "arona build ./src/index.ts",
+    "test": "vp test",
+    "check:types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@arona/core": "workspace:*",
+    "@arona/discord": "workspace:*",
+    "@effect/ui": "catalog:",
+    "discord.js": "^14.28.1",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  }
 }

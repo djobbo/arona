@@ -1,0 +1,24 @@
+{
+  "name": "@arona-ex/slack",
+  "private": true,
+  "description": "A Slack bot with interactive Block Kit messages",
+  "type": "module",
+  "module": "index.ts",
+  "scripts": {
+    "dev": "arona dev ./src/index.ts",
+    "build": "arona build ./src/index.ts",
+    "test": "vp test",
+    "check:types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@arona/core": "workspace:*",
+    "@arona/slack": "workspace:*",
+    "@effect/ui": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

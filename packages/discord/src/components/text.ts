@@ -1,29 +1,6 @@
-import { type AronaNode, defineComponent, renderTextContent } from "@arona/core"
-import { TextDisplayBuilder, type TextDisplayComponentData } from "discord.js"
-import type { ReactNode } from "react"
-import { EMPTY_STRING } from "../constants"
-import type { AronaDiscordProps } from "./types"
+import type { View } from "@effect/ui";
+import type * as Discord from "../vocabulary";
 
-export interface TextProps
-	extends Omit<AronaDiscordProps<TextDisplayComponentData>, "content"> {
-	children: ReactNode
-}
-
-export const textComponent = defineComponent({
-	name: "arona:text",
-	allowedChildren: [],
-	render: () => (node: AronaNode<TextProps>) => {
-		const textContent = renderTextContent(node)
-
-		const { children: _children, ...props } = node.props
-
-		const text = new TextDisplayBuilder({
-			...props,
-			content: textContent.length < 1 ? EMPTY_STRING : textContent,
-		}).toJSON()
-
-		return {
-			components: [text],
-		}
-	},
-})
+/** A Discord text display. Children are rendered as markdown. */
+export const Text = <Msg>(h: Discord.H<Msg>, ...content: View.Children<Msg>) =>
+  h.text.children(...content);

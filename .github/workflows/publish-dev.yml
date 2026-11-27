@@ -3,19 +3,18 @@ on:
   workflow_dispatch:
     inputs:
       package:
-        description: 'Package to publish (optional)'
+        description: "Package to publish (optional)"
         required: false
         type: string
   push:
     branches:
       - master
     paths:
-      - 'packages/**'
-      - 'scripts/**'
-      - 'package.json'
-      - 'bun.lockb'
+      - "packages/**"
+      - "scripts/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
 
-# Prevent multiple workflows from running at the same time
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -26,24 +25,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
+      - uses: pnpm/action-setup@v4
         with:
-          bun-version: latest
-      - name: Install dependencies
-        uses: actions/cache@v4
+          version: 12.23.0
+      - uses: actions/setup-node@v4
         with:
-          path: |
-            ~/.bun/install/cache
-            node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-      - name: Check types
-        run: bun run check:types:all
-      - name: Check lint
-        run: bun run check:lint:all
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec vp check
+      - run: pnpm test
 
   publish:
     name: Publish
@@ -54,40 +45,27 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: '@arona/core'
+          - name: "@arona/core"
             folder: packages/core
-          - name: '@arona/discord'
+          - name: "@arona/discord"
             folder: packages/discord
+          - name: "@arona/slack"
+            folder: packages/slack
           - name: create-arona-app
             folder: packages/create-arona-app
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
-      - uses: oven-sh/setup-bun@v1
+      - uses: pnpm/action-setup@v4
         with:
-          bun-version: latest
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+          version: 12.23.0
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-      
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.bun/install/cache
-            node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-      
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-      
+          node-version: 26
+          registry-url: "https://registry.npmjs.org"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - name: Setup npm authentication
         run: |
           echo "//registry.npmjs.org/:_authToken=$NPM_PUBLISH_TOKEN" > ~/.npmrc
@@ -95,24 +73,12 @@ jobs:
           echo "always-auth=true" >> ~/.npmrc
         env:
           NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-      
       - name: Publish to npm
         run: |
-          if [ -n "${{ github.event.inputs.package }}" ]; then
-            if [ "${{ github.event.inputs.package }}" = "${{ matrix.name }}" ]; then
-              bun run ./scripts/publish-dev.ts ${{ matrix.name }} ${{ matrix.folder }}
-            else
-              echo "Skipping ${{ matrix.name }} as it doesn't match the specified package"
-            fi
-          else
-            bun run ./scripts/publish-dev.ts ${{ matrix.name }} ${{ matrix.folder }}
+          if [ -n "${{ github.event.inputs.package }}" ] && [ "${{ github.event.inputs.package }}" != "${{ matrix.name }}" ]; then
+            echo "Skipping ${{ matrix.name }}"
+            exit 0
           fi
+          pnpm exec vpx ./scripts/publish-dev.ts ${{ matrix.name }} ${{ matrix.folder }}
         env:
           NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-          DEBUG: ${{ github.event_name == 'workflow_dispatch' && 'true' || '' }}
-      
-      - name: Handle failure
-        if: failure()
-        run: |
-          echo "::error::Failed to publish ${{ matrix.name }}"
-          exit 1

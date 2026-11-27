@@ -1,0 +1,24 @@
+packages:
+  - docs
+  - examples/*
+  - packages/*
+
+minimumReleaseAgeExclude:
+  - "@astrojs/starlight@0.43.2"
+  - effect@4.1.6
+
+catalog:
+  vite: npm:@voidzero-dev/vite-plus-core@8.3.8001
+  vite-plus: 1.8.0
+  effect: 4.1.6
+  "@effect/ui": https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d
+  typescript: ^5.8.3
+  "@types/node": ^26.6.10
+
+overrides:
+  vite@*: "catalog:"
+
+allowBuilds:
+  esbuild: true
+  sharp: true
+  "@resvg/resvg-js": true
