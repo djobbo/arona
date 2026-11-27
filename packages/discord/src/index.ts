@@ -10,6 +10,8 @@ export * from "./commands/helpers/reload-commands";
 
 export * from "./client";
 export * from "./render";
+export * from "./http";
+export * from "./rest";
 export * from "./root";
 export * from "./host";
 export * from "./node";

@@ -151,17 +151,51 @@ interaction for a session loads the record and resumes lazily. Self-updating
 messages (queries, subscriptions, `unmountAfter`) do not run while the process
 is down; resume them eagerly with `listActive` if that matters.
 
-Serverless HTTP interactions are the next adapter. Keep these constraints in
-mind:
+## HTTP interactions
+
+`createInteractionsHandler` is a Fetch API handler for Discord's Interactions
+Endpoint URL. It verifies the Ed25519 signature, answers `PING`, and feeds the
+same `AronaDiscordClient` and session store:
+
+```ts
+import { createInteractionsHandler } from "@arona/discord";
+
+const handler = createInteractionsHandler({
+  client,
+  publicKey: process.env.DISCORD_PUBLIC_KEY!,
+  token: process.env.DISCORD_APP_TOKEN!,
+  // Inline: process before responding, so a modal can be the answer.
+  // Finish within Discord's three-second deadline.
+  defer: false,
+});
+```
+
+Point the platform route at `handler` and pass the `Request`. The default
+verifier uses Node's `crypto`; pass `verify` to plug in WebCrypto for a
+different runtime. Two modes:
+
+- `defer: false` (default) processes before responding. The first message
+  update or modal becomes the interaction response, so dialogs work. The whole
+  path must finish within three seconds; use a warm store and a warm runtime.
+- `defer: true` returns `type 5`/`type 6` immediately and continues through
+  REST. Use the platform's `background` hook (`ctx.waitUntil`, `waitUntil`,
+  SQS, …). Modals cannot be opened after an acknowledgement, so keep
+  modal-opening interactions on the inline path.
+
+Raw JSON messages, channel edits, and interaction-token edits are handled by
+the bundled `DiscordRest` client. Message file uploads over HTTP are not
+supported yet.
+
+Keep these constraints in mind:
 
 - gateway and HTTP interactions are mutually exclusive per application;
 - HTTP gives you commands, buttons, selects, modals, and autocomplete, not
   `MESSAGE_CREATE`;
-- the initial response must arrive within 3 seconds, so a cold path should defer
-  and finish through the interaction token or a channel edit;
 - an interaction is not retried, so persist the session before acknowledging;
 - the token for `@original` lasts 15 minutes, while bot-token channel edits can
-  continue after that for non-ephemeral messages.
+  continue after that for non-ephemeral messages;
+- a modal that was itself the initial response to a command has no platform
+  message yet, so message-session resume cannot recover it on submit.
 
 ## Limits
 
@@ -170,5 +204,11 @@ mind:
 - Props must be JSON-serialisable when the store is durable.
 - The file store checks CAS before writing but is not a multi-writer
   transaction. Use a database when several processes share state.
+- The HTTP adapter mounts a fresh root per request and releases session roots
+  afterwards. It assumes one in-flight interaction per process; the store CAS
+  prevents corruption, but add a per-session lease for concurrent handlers.
+- `layerMemory` loses sessions on a cold start. Behind HTTP, use a shared
+  durable store.
+- HTTP message file uploads are not supported yet.
 - The snapshot/resume API is currently a `pnpm patch` of `@effect/ui`
   (`Root.snapshot` and `mount({ state })`). Rebase the patch when upgrading.

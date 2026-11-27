@@ -198,8 +198,14 @@ export class AronaDiscordClient extends Client {
   /**
    * Handles one interaction, including commands, warm roots and cold session
    * resumes. Exposed separately so tests and HTTP adapters can await it.
+   *
+   * `fresh` discards a warm session root first. HTTP adapters use it because
+   * every interaction has its own response buffer and interaction token.
    */
-  async handleInteraction(interaction: Interaction): Promise<void> {
+  async handleInteraction(
+    interaction: Interaction,
+    options: { readonly fresh?: boolean } = {},
+  ): Promise<void> {
     const type = interactionType(interaction);
     await this.#telemetry.span(
       TelemetrySpans.interaction,
@@ -247,7 +253,11 @@ export class AronaDiscordClient extends Client {
         const parts =
           "customId" in interaction ? parseInteractionId(interaction.customId) : undefined;
         if (!handled && parts !== undefined && this.#sessions !== undefined) {
-          handled = await this.#handleSessionInteraction(interaction, parts);
+          handled = await this.#handleSessionInteraction(
+            interaction,
+            parts,
+            options.fresh === true,
+          );
         }
 
         if (!handled) {
@@ -267,6 +277,7 @@ export class AronaDiscordClient extends Client {
   async #handleSessionInteraction(
     interaction: Interaction,
     parts: InteractionIdParts,
+    fresh: boolean,
   ): Promise<boolean> {
     const store = this.#sessions;
     if (store === undefined) return false;
@@ -286,7 +297,7 @@ export class AronaDiscordClient extends Client {
     }
 
     let root = this.#sessionRoots.get(session.id);
-    if (root !== undefined && (root.closed || root.sessionVersion !== session.version)) {
+    if (root !== undefined && (fresh || root.closed || root.sessionVersion !== session.version)) {
       await root.unmount();
       root = undefined;
     }
@@ -345,6 +356,13 @@ export class AronaDiscordClient extends Client {
       },
     );
     return root;
+  }
+
+  /** Unmounts every session root without stopping the client. */
+  async releaseSessionRoots(): Promise<void> {
+    const roots = [...this.#sessionRoots.values()];
+    await Promise.all(roots.map((root) => root.unmount()));
+    this.#sessionRoots.clear();
   }
 
   addRoot(root: DiscordMessageRoot): this {

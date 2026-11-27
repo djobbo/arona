@@ -86,6 +86,11 @@ Arona does not add structural components implicitly.
 - stale interactions heal the message from stored state and are dropped
 - slash commands use sessions automatically when the client has a store
 - `decodeProps` hook reattaches live props on resume
+- `createInteractionsHandler` for Discord's HTTP Interactions Endpoint URL
+- Ed25519 signature verification and `PING`
+- inline mode (supports modals, must fit the 3s deadline) and deferred mode with a background hook
+- `DiscordRest` for raw channel, `@original`, and follow-up edits
+- `RestInteraction`, `RestOptions`, and `RestModalFields` shims over raw payloads
 
 ## Lifecycle
 

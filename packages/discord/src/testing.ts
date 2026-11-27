@@ -74,6 +74,11 @@ export const findComponent = (
     const found = findComponent(accessory, predicate);
     if (found) return found;
   }
+  const nested = record.component;
+  if (nested) {
+    const found = findComponent(nested, predicate);
+    if (found) return found;
+  }
   return undefined;
 };
 

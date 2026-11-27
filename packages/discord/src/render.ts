@@ -226,7 +226,7 @@ export const mountSessionMessage = async <
     return Option.isSome(latest) ? latest.value : fallback;
   };
 
-  if (current.message?.id !== message.id) {
+  if (message.id !== "" && current.message?.id !== message.id) {
     const channelId = (message as { channelId?: string }).channelId;
     const guildId = (message as { guildId?: string }).guildId;
     const attached = await Effect.runPromise(
