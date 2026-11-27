@@ -71,6 +71,7 @@ export class DiscordHost extends BaseBotHost {
       "messaging.system": "discord",
     });
 
+    this.prepareInteractionIds();
     this.#nodesByCustomId.clear();
     for (const node of this.container.descendants()) {
       if (node.customId && (node.tag === "modal" || Object.keys(node.handlers).length > 0)) {

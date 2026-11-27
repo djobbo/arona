@@ -5,6 +5,7 @@ import {
   type MessageRenderOptions,
   type MessageRootClient,
   type MessageTarget,
+  type RootSession,
 } from "./message";
 import { Telemetry, TelemetryMetrics, TelemetrySpans, type TelemetryHandle } from "./telemetry";
 
@@ -18,10 +19,17 @@ export interface MountBotMessageOptions<Host, Message, Snapshot, Interaction, Pr
   readonly container: unknown;
   /** Renderer, host and application layers for this message. */
   readonly layer: LayerType.Layer<any, any, any>;
-  readonly onInteraction: (interaction: Interaction) => Promise<void>;
+  readonly onInteraction: (
+    interaction: Interaction,
+    root: BotMessageRoot<Host, Message, Snapshot, Interaction>,
+  ) => Promise<void>;
   readonly client: MessageRootClient | undefined;
   readonly ref: unknown;
   readonly renderOptions: MessageRenderOptions;
+  /** Models from `Root.snapshot` to resume instead of calling `init`. */
+  readonly state?: Renderer.State | undefined;
+  /** Binds the root to a resumable message session. */
+  readonly session?: RootSession | undefined;
   readonly telemetry?: TelemetryHandle | undefined;
 }
 
@@ -61,9 +69,11 @@ export const mountBotMessage = async <Host, Message, Snapshot, Interaction, Prop
     rejectMount = reject;
   });
 
+  let mounted: Renderer.Root<any, any> | undefined;
+
   const program = Effect.gen(function* () {
-    yield* telemetry.withSpan(
-      Renderer.mount(options.component, options.props, container),
+    mounted = yield* telemetry.withSpan(
+      Renderer.mount(options.component, options.props, container, { state: options.state }),
       TelemetrySpans.messageMount,
       {
         attributes: {
@@ -113,7 +123,12 @@ export const mountBotMessage = async <Host, Message, Snapshot, Interaction, Prop
     "arona.component": component,
   });
 
-  const root = new BotMessageRoot<Host, Message, Snapshot, Interaction>({
+  const root: BotMessageRoot<Host, Message, Snapshot, Interaction> = new BotMessageRoot<
+    Host,
+    Message,
+    Snapshot,
+    Interaction
+  >({
     fiber,
     host,
     target,
@@ -121,6 +136,9 @@ export const mountBotMessage = async <Host, Message, Snapshot, Interaction, Prop
     renderOptions: options.renderOptions,
     client,
     interaction: onInteraction,
+    snapshot: () =>
+      mounted === undefined ? Effect.die(new Error("Message is not mounted")) : mounted.snapshot,
+    ...(options.session === undefined ? {} : { session: options.session }),
     telemetry,
   });
   client?.addRoot?.(root);

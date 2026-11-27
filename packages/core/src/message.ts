@@ -1,6 +1,13 @@
 import { randomUUID } from "node:crypto";
+import type { Renderer } from "@effect/ui";
 import { Effect, Fiber } from "effect";
 import { Telemetry, TelemetryMetrics, TelemetrySpans, type TelemetryHandle } from "./telemetry";
+
+/** The session a message root is bound to, if it is resumable. */
+export interface RootSession {
+  readonly id: string;
+  readonly version: number;
+}
 
 export interface MessageRenderOptions {
   readonly ephemeral?: boolean;
@@ -28,7 +35,13 @@ export interface BotMessageRootOptions<Host, Message, Snapshot, Interaction> {
   readonly ref: unknown;
   readonly renderOptions: MessageRenderOptions;
   readonly client: MessageRootClient | undefined;
-  readonly interaction: (interaction: Interaction) => Promise<void>;
+  readonly interaction: (
+    interaction: Interaction,
+    root: BotMessageRoot<Host, Message, Snapshot, Interaction>,
+  ) => Promise<void>;
+  /** Encodes the mounted tree's current models for a later resume. */
+  readonly snapshot: () => Effect.Effect<Renderer.State>;
+  readonly session?: RootSession | undefined;
   readonly telemetry?: TelemetryHandle | undefined;
 }
 
@@ -44,9 +57,15 @@ export class BotMessageRoot<Host, Message, Snapshot, Interaction> {
   readonly #host: Host;
   readonly #target: MessageTarget<Message, Snapshot>;
   readonly #ref: unknown;
-  readonly #interaction: (interaction: Interaction) => Promise<void>;
+  readonly #interaction: (
+    interaction: Interaction,
+    root: BotMessageRoot<Host, Message, Snapshot, Interaction>,
+  ) => Promise<void>;
   readonly #client: MessageRootClient | undefined;
+  readonly #snapshot: () => Effect.Effect<Renderer.State>;
   readonly #telemetry: TelemetryHandle;
+  readonly sessionId: string | undefined;
+  #sessionVersion: number;
   #timer: ReturnType<typeof setTimeout> | null = null;
   #closed = false;
 
@@ -57,7 +76,10 @@ export class BotMessageRoot<Host, Message, Snapshot, Interaction> {
     this.#ref = options.ref;
     this.#interaction = options.interaction;
     this.#client = options.client;
+    this.#snapshot = options.snapshot;
     this.#telemetry = options.telemetry ?? Telemetry.current();
+    this.sessionId = options.session?.id;
+    this.#sessionVersion = options.session?.version ?? 0;
 
     if (options.renderOptions.unmountAfter) {
       this.#timer = setTimeout(() => void this.unmount(), options.renderOptions.unmountAfter);
@@ -80,6 +102,21 @@ export class BotMessageRoot<Host, Message, Snapshot, Interaction> {
     return this.#closed;
   }
 
+  /** The state version the platform message currently shows. */
+  get sessionVersion(): number {
+    return this.#sessionVersion;
+  }
+
+  /** Updates the version the host stamps on the next commit. */
+  setSessionVersion(version: number): void {
+    this.#sessionVersion = version;
+  }
+
+  /** Encodes every mounted instance's model, for a later `mount({ state })`. */
+  snapshot(): Effect.Effect<Renderer.State> {
+    return this.#snapshot();
+  }
+
   interactionListener(interaction: Interaction): Promise<void> {
     if (this.#closed) return Promise.resolve();
     return this.#telemetry.span(
@@ -91,7 +128,7 @@ export class BotMessageRoot<Host, Message, Snapshot, Interaction> {
           "arona.message.uuid": this.uuid,
         },
       },
-      () => this.#interaction(interaction),
+      () => this.#interaction(interaction, this),
     );
   }
 

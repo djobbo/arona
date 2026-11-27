@@ -23,6 +23,7 @@ export abstract class BotMessageTarget<Message, Snapshot> {
   #running = false;
   #closed = false;
   #settled = false;
+  #skipInitial = false;
 
   protected constructor(platform = "unknown", telemetry: TelemetryHandle = Telemetry.current()) {
     this.platform = platform;
@@ -69,6 +70,19 @@ export abstract class BotMessageTarget<Message, Snapshot> {
     }
   }
 
+  /**
+   * Continues an existing platform message instead of creating one.
+   *
+   * `skipInitial` drops the first rendered state: the caller has just
+   * restored it from a session and is about to apply an interaction, so the
+   * only edit the user should see is the post-interaction one.
+   */
+  protected seed(message: Message, options: { readonly skipInitial?: boolean } = {}): void {
+    if (this.#settled || this.#closed) return;
+    this.#message = message;
+    this.#skipInitial = options.skipInitial ?? true;
+  }
+
   /** Creates the first message or edits the existing one. */
   protected abstract send(snapshot: Snapshot): Promise<Message>;
 
@@ -86,6 +100,15 @@ export abstract class BotMessageTarget<Message, Snapshot> {
         this.#latest = null;
 
         const fingerprint = this.fingerprint(snapshot);
+        if (this.#skipInitial) {
+          this.#skipInitial = false;
+          this.#lastSent = fingerprint;
+          if (!this.#settled && this.#message !== null) {
+            this.#settled = true;
+            this.#resolveReady(this.#message);
+          }
+          continue;
+        }
         if (fingerprint === this.#lastSent) continue;
         this.#lastSent = fingerprint;
 

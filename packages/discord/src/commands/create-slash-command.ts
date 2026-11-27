@@ -1,9 +1,20 @@
+import type { MessageSessionStoreShape } from "@arona/core";
 import { type Component } from "@effect/ui";
 import { Schema, type Layer } from "effect";
-import { renderMessage } from "../render";
+import { mountSessionMessage, renderMessage } from "../render";
 import * as Discord from "../vocabulary";
 import { SlashCommandBuilder, type SlashCommandInteraction } from "./command-builder";
 import { CommandProvider } from "./command-provider";
+
+interface SessionClient {
+  readonly sessions?: MessageSessionStoreShape | undefined;
+  readonly build?: string | undefined;
+  registerComponent?(
+    key: string,
+    component: Component.Any,
+    options?: { readonly decodeProps?: (props: unknown, interaction: unknown) => unknown },
+  ): unknown;
+}
 
 export interface SlashCommandOptions<Params = object> {
   readonly command:
@@ -42,6 +53,10 @@ export const createSlashCommand = <Params = object>(
   { command, component, layer }: SlashCommandOptions<Params>,
 ) => {
   const Host = component ? createCommandHost(component) : null;
+  const decodeProps = (stored: unknown, current: unknown) => ({
+    interaction: current,
+    params: (stored as { params?: unknown } | undefined)?.params,
+  });
 
   return {
     name,
@@ -49,19 +64,42 @@ export const createSlashCommand = <Params = object>(
       ? command
       : command(new SlashCommandBuilder<Params>())
     ).setName(name),
+    ...(Host === null || component === undefined
+      ? {}
+      : { session: { key: name, component: Host as never, decodeProps } }),
     handler: async (interaction: SlashCommandInteraction<Params>) => {
       if (interaction.commandName !== name) return;
 
       if (Host && component) {
-        await renderMessage(
-          interaction,
-          Host,
-          {
+        const client = (interaction as { client?: SessionClient }).client;
+        if (client?.sessions !== undefined) {
+          client.registerComponent?.(name, Host, { decodeProps });
+          await mountSessionMessage(
             interaction,
-            params: interaction.params,
-          },
-          { layer },
-        );
+            Host,
+            {
+              interaction,
+              params: interaction.params,
+            },
+            {
+              store: client.sessions,
+              componentKey: name,
+              sessionProps: { params: interaction.params },
+              ...(client.build === undefined ? {} : { build: client.build }),
+              ...(layer === undefined ? {} : { layer }),
+            },
+          );
+        } else {
+          await renderMessage(
+            interaction,
+            Host,
+            {
+              interaction,
+              params: interaction.params,
+            },
+            { layer },
+          );
+        }
       }
     },
   };

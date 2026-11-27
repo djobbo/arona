@@ -31,6 +31,13 @@ export interface MessageRenderOptions {
   readonly ephemeral?: boolean;
   /** Unmount after this many milliseconds. */
   readonly unmountAfter?: number;
+  /** Continue this message instead of creating a new one. */
+  readonly resume?: Message | undefined;
+  /**
+   * With `resume`, drop the first restored render. The caller is about to
+   * apply an interaction, so only the post-interaction state should be sent.
+   */
+  readonly skipInitial?: boolean | undefined;
   /** Telemetry runtime for this message. Defaults to the process-wide runtime. */
   readonly telemetry?: TelemetryHandle | undefined;
 }

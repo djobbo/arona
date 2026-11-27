@@ -76,6 +76,17 @@ Arona does not add structural components implicitly.
 - A Slack `Section` must contain a `Text` or `Markdown` child.
 - A Slack `Actions` block must contain at least one `Button`.
 
+## Resumable messages
+
+- `MessageSessionStore` Layer with memory and JSON-file implementations
+- session records carry component key, encoded props, `Root.snapshot` state, message reference, version, and TTL
+- `mountSessionMessage` persists after mount and after every interaction
+- deterministic custom ids `ar1.<session>.<version>.<key>` assigned at commit time
+- gateway client lazily resumes from the store after a restart
+- stale interactions heal the message from stored state and are dropped
+- slash commands use sessions automatically when the client has a store
+- `decodeProps` hook reattaches live props on resume
+
 ## Lifecycle
 
 - `mountMessage` returns a `DiscordMessageRoot` or `SlackMessageRoot`

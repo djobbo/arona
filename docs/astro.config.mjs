@@ -13,7 +13,10 @@ export default defineConfig({
       sidebar: [
         {
           label: "Guides",
-          items: [{ label: "Overview", slug: "guides/overview" }],
+          items: [
+            { label: "Overview", slug: "guides/overview" },
+            { label: "Resumable messages", slug: "guides/resumable-messages" },
+          ],
         },
         {
           label: "Reference",

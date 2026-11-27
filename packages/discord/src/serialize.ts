@@ -177,7 +177,7 @@ const serializeButton = (node: DiscordNode): Json | null => {
   const label = stringValue(node, "label") ?? labelOf(node);
   const disabled = booleanValue(node, "disabled") ?? false;
   const emoji = value(node, "emoji");
-  const customId = stringValue(node, "customId") ?? node.customId ?? node.id;
+  const customId = node.customId ?? stringValue(node, "customId") ?? node.id;
 
   const labelValue = label || (emoji === undefined ? EMPTY_STRING : undefined);
   const data = {
@@ -562,7 +562,7 @@ export const serializeMessage = (root: DiscordNode): MessageSnapshot => {
 };
 
 const inputCustomId = (node: DiscordNode): string =>
-  stringValue(node, "customId") ?? node.customId ?? node.id;
+  node.customId ?? stringValue(node, "customId") ?? node.id;
 
 const fieldName = (node: DiscordNode): string => stringValue(node, "name") ?? inputCustomId(node);
 
@@ -694,7 +694,7 @@ const buildLabel = (labelNode: DiscordNode, field: DiscordNode): LabelBuilder =>
 /** Builds the modal a `modal` node describes. */
 export const buildModal = (node: DiscordNode): ModalBuilder => {
   const modal = new ModalBuilder({
-    customId: stringValue(node, "customId") ?? node.customId ?? node.id,
+    customId: node.customId ?? stringValue(node, "customId") ?? node.id,
     title: stringValue(node, "title") ?? "Modal",
   });
 

@@ -1,5 +1,12 @@
 import type { Renderer, View } from "@effect/ui";
 import { BotNode } from "./node";
+import { encodeInteractionId, MAX_INTERACTION_ID_LENGTH } from "./session";
+
+/** The session an Arona host stamps onto its generated interaction ids. */
+export interface HostSession {
+  readonly id: string;
+  readonly version: number;
+}
 
 export interface BotHostOptions {
   /** The vocabulary name this host renders, such as `discord` or `slack`. */
@@ -27,6 +34,7 @@ export class BotHost implements Renderer.Host<BotNode> {
   protected readonly prefix: string;
   readonly #interactiveTags: ReadonlySet<string>;
   #counter = 0;
+  #session: HostSession | null = null;
 
   constructor(options: BotHostOptions) {
     this.platform = options.name;
@@ -40,10 +48,50 @@ export class BotHost implements Renderer.Host<BotNode> {
     return `${this.prefix}-${++this.#counter}`;
   }
 
+  /** The session whose id and version are stamped onto interaction ids. */
+  get session(): HostSession | null {
+    return this.#session;
+  }
+
+  /** Binds the host to a resumable message session. */
+  setSession(session: HostSession | null): void {
+    this.#session = session;
+  }
+
+  /** Advances the version used by the next commit. */
+  setSessionVersion(version: number): void {
+    if (this.#session !== null) this.#session = { ...this.#session, version };
+  }
+
+  /**
+   * Assigns every interactive node its platform-facing custom id.
+   *
+   * Without a session the id keeps the old host-generated value. With one,
+   * auto ids are document-order ordinals and explicit ids keep the author's
+   * text as the key, both wrapped with the session and its current version.
+   * A restored tree therefore produces the same ids as the state it shows.
+   */
+  prepareInteractionIds(): void {
+    let ordinal = 0;
+    for (const node of this.container.descendants()) {
+      if (!this.#interactiveTags.has(node.tag)) continue;
+      if (this.#session === null) {
+        node.customId = node.explicitCustomId ?? node.id;
+        continue;
+      }
+      const key = node.explicitCustomId ?? `a${ordinal++}`;
+      const customId = encodeInteractionId(this.#session.id, this.#session.version, key);
+      if (customId.length > MAX_INTERACTION_ID_LENGTH) {
+        throw new Error(
+          `Interaction id for <${node.tag}> is ${customId.length} characters; the limit is ${MAX_INTERACTION_ID_LENGTH}`,
+        );
+      }
+      node.customId = customId;
+    }
+  }
+
   createElement(tag: string): BotNode {
-    const node = new BotNode(tag, this.nextId());
-    if (this.#interactiveTags.has(tag)) node.customId = node.id;
-    return node;
+    return new BotNode(tag, this.nextId());
   }
 
   createText(text: string): BotNode {
@@ -63,21 +111,33 @@ export class BotHost implements Renderer.Host<BotNode> {
   setAttr(node: BotNode, name: string, value: string | undefined, _previous?: string): void {
     if (value === undefined) {
       delete node.attrs[name];
-      if (name === "customId") node.customId = node.id;
+      if (name === "customId") {
+        node.explicitCustomId = null;
+        node.customId = null;
+      }
       return;
     }
     node.attrs[name] = value;
-    if (name === "customId") node.customId = value;
+    if (name === "customId") {
+      node.explicitCustomId = value;
+      node.customId = value;
+    }
   }
 
   setProp(node: BotNode, name: string, value: unknown): void {
     if (value === undefined) {
       delete node.props[name];
-      if (name === "customId") node.customId = node.id;
+      if (name === "customId") {
+        node.explicitCustomId = null;
+        node.customId = null;
+      }
       return;
     }
     node.props[name] = value;
-    if (name === "customId" && typeof value === "string") node.customId = value;
+    if (name === "customId" && typeof value === "string") {
+      node.explicitCustomId = value;
+      node.customId = value;
+    }
   }
 
   insertBefore(parent: BotNode, node: BotNode, ref: BotNode | undefined): void {

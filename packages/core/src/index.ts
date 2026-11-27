@@ -4,5 +4,6 @@ export * from "./node";
 export * from "./host";
 export * from "./message";
 export * from "./mount";
+export * from "./session";
 export * from "./target";
 export * from "./telemetry";

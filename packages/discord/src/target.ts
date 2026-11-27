@@ -33,6 +33,9 @@ export class DiscordMessageTarget extends BotMessageTarget<Message, MessageSnaps
     super("discord", options.telemetry);
     this.#ref = ref;
     this.#options = options;
+    if (options.resume !== undefined) {
+      this.seed(options.resume, { skipInitial: options.skipInitial ?? true });
+    }
   }
 
   #payload(snapshot: MessageSnapshot, includeFlags: boolean): ReplyPayload {

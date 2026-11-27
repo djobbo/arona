@@ -85,6 +85,61 @@ describe("DiscordHost", () => {
     expect(await host.dispatchInteraction(interaction as never)).toBe(false);
     expect(interaction.deferredUpdates).toBe(0);
   });
+
+  it("assigns deterministic session interaction ids in document order", () => {
+    const render = (version: number) => {
+      const host = new DiscordHost({ prefix: "random-prefix" });
+      host.setSession({ id: "session", version });
+      const first = host.createElement("button");
+      const second = host.createElement("button");
+      host.setAttr(first, "label", "First");
+      host.setAttr(second, "label", "Second");
+      host.insertBefore(host.container, first, undefined);
+      host.insertBefore(host.container, second, undefined);
+      host.commit();
+      return { host, first, second };
+    };
+
+    const one = render(1);
+    expect(one.first.customId).toBe("ar1.session.1.a0");
+    expect(one.second.customId).toBe("ar1.session.1.a1");
+
+    const again = render(1);
+    expect(again.first.customId).toBe(one.first.customId);
+    expect(again.second.customId).toBe(one.second.customId);
+
+    const later = render(2);
+    expect(later.first.customId).toBe("ar1.session.2.a0");
+    expect(later.second.customId).toBe("ar1.session.2.a1");
+  });
+
+  it("keeps an author's custom id as the interaction id key", () => {
+    const host = new DiscordHost({ prefix: "random-prefix" });
+    host.setSession({ id: "session", version: 0 });
+    const button = host.createElement("button");
+    host.setAttr(button, "label", "Explicit");
+    host.setAttr(button, "customId", "my.button");
+    host.insertBefore(host.container, button, undefined);
+    host.commit();
+    expect(button.customId).toBe("ar1.session.0.my.button");
+  });
+
+  it("recomputes ordinals after a node leaves the tree", () => {
+    const host = new DiscordHost({ prefix: "random-prefix" });
+    host.setSession({ id: "session", version: 1 });
+    const first = host.createElement("button");
+    const second = host.createElement("button");
+    host.setAttr(first, "label", "First");
+    host.setAttr(second, "label", "Second");
+    host.insertBefore(host.container, first, undefined);
+    host.insertBefore(host.container, second, undefined);
+    host.commit();
+    expect(second.customId).toBe("ar1.session.1.a1");
+
+    first.detach();
+    host.commit();
+    expect(second.customId).toBe("ar1.session.1.a0");
+  });
 });
 
 describe("Discord layers", () => {

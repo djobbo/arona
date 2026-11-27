@@ -22,6 +22,8 @@ export class BotNode {
 
   /** The host-generated id, used for default block/action ids. */
   id: string;
+  /** The author's custom id, before Arona wraps it for a session. */
+  explicitCustomId: string | null = null;
   /** The id the platform sends back on an interaction. */
   customId: string | null = null;
   /** A platform-specific modal already shown for this node. */

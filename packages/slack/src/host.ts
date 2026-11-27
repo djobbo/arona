@@ -52,6 +52,7 @@ export class SlackHost extends BaseBotHost {
       "messaging.system": "slack",
     });
 
+    this.prepareInteractionIds();
     this.#nodesByActionId.clear();
     for (const node of this.container.descendants()) {
       if (node.tag === "button" && Object.keys(node.handlers).length > 0) {
