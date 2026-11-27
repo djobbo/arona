@@ -184,8 +184,8 @@ settings:
 catalogs:
   default:
     '@effect/ui':
-      specifier: https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d
-      version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d
+      specifier: https://pkg.pr.new/Effect-TS/ui/@effect/ui@c9f4f6ec6746
+      version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@c9f4f6ec6746
     '@types/node':
       specifier: ^26.6.10
       version: 26.6.10
@@ -204,6 +204,9 @@ catalogs:
 
 overrides:
   vite@*: npm:@voidzero-dev/vite-plus-core@8.3.8001
+
+patchedDependencies:
+  '@effect/ui@0.0.0': 7f1c55936a0640c06471eca8f4d3736dffd90773dd79172c992749d28a3effe5
 
 importers:
 
@@ -250,7 +253,7 @@ importers:
         version: link:../../packages/discord
       '@effect/ui':
         specifier: 'catalog:'
-        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d(effect@4.1.6)
+        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@c9f4f6ec6746(patch_hash=7f1c55936a0640c06471eca8f4d3736dffd90773dd79172c992749d28a3effe5)(effect@4.1.6)
       discord.js:
         specifier: ^14.28.1
         version: 14.28.1
@@ -278,7 +281,7 @@ importers:
         version: link:../../packages/discord
       '@effect/ui':
         specifier: 'catalog:'
-        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d(effect@4.1.6)
+        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@c9f4f6ec6746(patch_hash=7f1c55936a0640c06471eca8f4d3736dffd90773dd79172c992749d28a3effe5)(effect@4.1.6)
       discord.js:
         specifier: ^14.28.1
         version: 14.28.1
@@ -306,7 +309,7 @@ importers:
         version: link:../../packages/discord
       '@effect/ui':
         specifier: 'catalog:'
-        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d(effect@4.1.6)
+        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@c9f4f6ec6746(patch_hash=7f1c55936a0640c06471eca8f4d3736dffd90773dd79172c992749d28a3effe5)(effect@4.1.6)
       discord.js:
         specifier: ^14.28.1
         version: 14.28.1
@@ -334,7 +337,7 @@ importers:
         version: link:../../packages/slack
       '@effect/ui':
         specifier: 'catalog:'
-        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d(effect@4.1.6)
+        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@c9f4f6ec6746(patch_hash=7f1c55936a0640c06471eca8f4d3736dffd90773dd79172c992749d28a3effe5)(effect@4.1.6)
       effect:
         specifier: 'catalog:'
         version: 4.1.6
@@ -353,7 +356,7 @@ importers:
     dependencies:
       '@effect/ui':
         specifier: 'catalog:'
-        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d(effect@4.1.6)
+        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@c9f4f6ec6746(patch_hash=7f1c55936a0640c06471eca8f4d3736dffd90773dd79172c992749d28a3effe5)(effect@4.1.6)
       dotenv:
         specifier: ^16.5.0
         version: 16.6.1
@@ -412,7 +415,7 @@ importers:
         version: link:../core
       '@effect/ui':
         specifier: 'catalog:'
-        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d(effect@4.1.6)
+        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@c9f4f6ec6746(patch_hash=7f1c55936a0640c06471eca8f4d3736dffd90773dd79172c992749d28a3effe5)(effect@4.1.6)
       '@resvg/resvg-js':
         specifier: ^2.6.2
         version: 2.6.2
@@ -443,7 +446,7 @@ importers:
         version: link:../core
       '@effect/ui':
         specifier: 'catalog:'
-        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d(effect@4.1.6)
+        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@c9f4f6ec6746(patch_hash=7f1c55936a0640c06471eca8f4d3736dffd90773dd79172c992749d28a3effe5)(effect@4.1.6)
       '@slack/bolt':
         specifier: ^5.1.0
         version: 5.1.0(@types/express@5.0.6)(supports-color@7.2.0)(undici@8.13.1)
@@ -774,8 +777,8 @@ packages:
     resolution: {integrity: sha512-wPlQDxEmlDg5IxhJPuxXr3Vy9AjYq5xCvFWGJyD7w7Np8ZGu+Mc+97LCoEc/+AYCo2IDpKioiH0/c/mj5ZR9Uw==}
     engines: {node: '>=16.11.0'}
 
-  '@effect/ui@https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d':
-    resolution: {integrity: sha512-MLbH1H1IJXTcz3dNc5Oiv16ESWphNRwL95tCB+CNl4jf4P2Vp8GVHgtmp13K9d7Mx4HTq+l0dOH71ncZxvPXsA==, tarball: https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d}
+  '@effect/ui@https://pkg.pr.new/Effect-TS/ui/@effect/ui@c9f4f6ec6746':
+    resolution: {integrity: sha512-b0RsW02XDOdvCfglyl3oGB1wfFpiLc/ANQa+zmKe8qS0z7Z1rTdxsa3fVZfTAlgkdxsyc0jtijYOHC1Mgh5JFQ==, tarball: https://pkg.pr.new/Effect-TS/ui/@effect/ui@c9f4f6ec6746}
     version: 0.0.0
     peerDependencies:
       effect: ^4.1.4
@@ -4405,7 +4408,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@effect/ui@https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d(effect@4.1.6)':
+  '@effect/ui@https://pkg.pr.new/Effect-TS/ui/@effect/ui@c9f4f6ec6746(patch_hash=7f1c55936a0640c06471eca8f4d3736dffd90773dd79172c992749d28a3effe5)(effect@4.1.6)':
     dependencies:
       effect: 4.1.6
 

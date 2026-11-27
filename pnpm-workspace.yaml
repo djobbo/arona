@@ -11,7 +11,7 @@ catalog:
   vite: npm:@voidzero-dev/vite-plus-core@8.3.8001
   vite-plus: 1.8.0
   effect: 4.1.6
-  "@effect/ui": https://pkg.pr.new/Effect-TS/ui/@effect/ui@fb618d45fb6d
+  "@effect/ui": https://pkg.pr.new/Effect-TS/ui/@effect/ui@c9f4f6ec6746
   typescript: ^5.8.3
   "@types/node": ^26.6.10
 
@@ -22,3 +22,6 @@ allowBuilds:
   esbuild: true
   sharp: true
   "@resvg/resvg-js": true
+
+patchedDependencies:
+  "@effect/ui@0.0.0": patches/@effect__ui@0.0.0.patch

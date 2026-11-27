@@ -1,0 +1,208 @@
+diff --git a/dist/Renderer.d.ts b/dist/Renderer.d.ts
+index 804e013e597992a1cc35606f76161b8a92dd5a69..d24a504e750d9ba0c09f06758dcac3d61ac75347 100644
+--- a/dist/Renderer.d.ts
++++ b/dist/Renderer.d.ts
+@@ -534,6 +534,18 @@ export interface Root<out Model, in Msg, in Props = never> {
+     readonly send: (message: Msg) => void;
+     /** Gives the root new props without remounting, as a parent does a child. */
+     readonly setProps: (props: Props) => void;
++    /**
++     * Encodes the current Model of every instance, the way `prerender` does.
++     *
++     * **Details**
++     *
++     * Pass the result back to `mount` as `state` to resume the same tree in a
++     * later process. Instances whose Model or query Schemas hold a
++     * `Schema.Redacted`, and instances a provided Layer kept off the server,
++     * are deferred and built fresh. A path whose state does not decode is
++     * built fresh too, so the state must come from the same build.
++     */
++    readonly snapshot: Effect.Effect<State>;
+     /**
+      * Completes once every instance has adopted the server's nodes, at once
+      * without hydration. Head sync and the router's announcements start with
+@@ -610,6 +622,8 @@ export declare const mount: <Name extends string, Props, Model, Msg, Events, R,
+     readonly query?: QueryOptions | undefined;
+     readonly head?: boolean | undefined;
+     readonly onEmit?: ((event: Events) => void) | undefined;
++    /** State from `Root.snapshot` or `prerender` to resume the tree from. */
++    readonly state?: State | undefined;
+ }) => Effect.Effect<Root<Model, Msg, Props>, never, R | RF | RP | HostOf<V> | Renderer | Scope.Scope>;
+ /**
+  * Cache-wide options for the query cache a mount owns. The app never
+diff --git a/dist/internal/runtime.js b/dist/internal/runtime.js
+index 5892319d338cabb73f11da7b16ec0d4bd3e3ffd4..1b8e5fcb7aafd650b978a44c36ae406897a11b46 100644
+--- a/dist/internal/runtime.js
++++ b/dist/internal/runtime.js
+@@ -16,6 +16,7 @@ import * as domHost from "./domHost.js";
+ import * as Executor from "./executor.js";
+ import { inline } from "./fork.js";
+ import * as heads from "./heads.js";
++import * as hydrateRun from "./hydrateRun.js";
+ import * as Kernel from "./kernel.js";
+ import * as lazy from "./lazy.js";
+ import * as messageLog from "./messageLog.js";
+@@ -199,7 +200,11 @@ const fromDom = (makeDom, elements) => ({
+   }
+ });
+ const mountCore = (component, props, container, hostOf, options) => {
+-  const path = rootPath(component, options?.key);
++  const resolved = options?.state === undefined || options.hydrate !== undefined ? options : {
++    ...options,
++    hydrate: hydrateRun.hydrating(options.state)
++  };
++  const path = rootPath(component, resolved?.key);
+   const go = decoded => Effect.uninterruptible(Effect.contextWith(ctx => {
+     const owner = Context.get(ctx, Scope.Scope);
+     if (isClosed(owner)) return Effect.interrupt;
+@@ -213,7 +218,7 @@ const mountCore = (component, props, container, hostOf, options) => {
+       }), () => close));
+     });
+     try {
+-      made = start(component, path, props, container, ctx, options, hostOf(ctx), undefined, decoded && [path, decoded]);
++      made = start(component, path, props, container, ctx, resolved, hostOf(ctx), undefined, decoded && [path, decoded]);
+     } finally {
+       ready = true;
+       if (waiters !== undefined) {
+@@ -222,7 +227,7 @@ const mountCore = (component, props, container, hostOf, options) => {
+     }
+     return isClosed(owner) ? Effect.interrupt : Effect.succeed(made.root);
+   }));
+-  const hydrate = options?.hydrate;
++  const hydrate = resolved?.hydrate;
+   return hydrate === undefined ? go(undefined) : hydrate.decode(component, path, go);
+ };
+ /** @internal */
+@@ -434,6 +439,7 @@ const start = (component, path, props, container, caller, options, hostInput, se
+     model: () => instance.failure === undefined ? instance.model : undefined,
+     send: message => recording.step(() => mounted.send(message)),
+     setProps: props => recording.step(() => mounted.setProps(props)),
++    snapshot: Effect.suspend(() => serialize.write(serialize.snapshot(instance, new Set(), undefined), undefined, ctx, false, serialize.mute)),
+     find: born => findIn(instance, born, recording.numberOf),
+     numberOf: recording.numberOf,
+     dispatch: (inst, message) => Effect.callback(resume => {
+diff --git a/dist/internal/serialize.js b/dist/internal/serialize.js
+index 8ad8cc8a9df9b5c90f9963b6dbbd3a58fbb0c6cc..164ac2951cae3130de0ea7d3ae1dc50819644a71 100644
+--- a/dist/internal/serialize.js
++++ b/dist/internal/serialize.js
+@@ -130,7 +130,7 @@ export const encodeProps = (inst, props, ctx) => Effect.catchCause(encodeJson(in
+   return Effect.undefined;
+ });
+ const ignore = () => {};
+-const mute = {
++export const mute = {
+   text: ignore,
+   open: ignore,
+   close: ignore,
+diff --git a/src/Renderer.ts b/src/Renderer.ts
+index 9f258dcb4765f9c770a36721fcfb359935e0a08b..69250f36454c20705018a5c3e3fb3d571bb6bb59 100644
+--- a/src/Renderer.ts
++++ b/src/Renderer.ts
+@@ -699,6 +699,18 @@ export interface Root<out Model, in Msg, in Props = never> {
+   readonly send: (message: Msg) => void
+   /** Gives the root new props without remounting, as a parent does a child. */
+   readonly setProps: (props: Props) => void
++  /**
++   * Encodes the current Model of every instance, the way `prerender` does.
++   *
++   * **Details**
++   *
++   * Pass the result back to `mount` as `state` to resume the same tree in a
++   * later process. Instances whose Model or query Schemas hold a
++   * `Schema.Redacted`, and instances a provided Layer kept off the server,
++   * are deferred and built fresh. A path whose state does not decode is
++   * built fresh too, so the state must come from the same build.
++   */
++  readonly snapshot: Effect.Effect<State>
+   /**
+    * Completes once every instance has adopted the server's nodes, at once
+    * without hydration. Head sync and the router's announcements start with
+@@ -798,6 +810,8 @@ export const mount: <
+     readonly query?: QueryOptions | undefined
+     readonly head?: boolean | undefined
+     readonly onEmit?: ((event: Events) => void) | undefined
++    /** State from `Root.snapshot` or `prerender` to resume the tree from. */
++    readonly state?: State | undefined
+   }
+ ) => Effect.Effect<
+   Root<Model, Msg, Props>,
+diff --git a/src/internal/runtime.ts b/src/internal/runtime.ts
+index 8ffac789d92860e7cd7d6afbfb732a3db1aa1713..d29c0871515b1110355c3b76c3db6b0efc281f2e 100644
+--- a/src/internal/runtime.ts
++++ b/src/internal/runtime.ts
+@@ -21,7 +21,7 @@ import * as domHost from "./domHost.ts"
+ import * as Executor from "./executor.ts"
+ import { inline } from "./fork.ts"
+ import * as heads from "./heads.ts"
+-import type * as hydrateRun from "./hydrateRun.ts"
++import * as hydrateRun from "./hydrateRun.ts"
+ import * as Kernel from "./kernel.ts"
+ import * as lazy from "./lazy.ts"
+ import * as messageLog from "./messageLog.ts"
+@@ -303,6 +303,7 @@ interface Options {
+     ) => View.Content<never, any>)
+     | undefined
+   readonly hydrate?: hydrateRun.Hydrating | undefined
++  readonly state?: Renderer.State | undefined
+   readonly hot?: HotSession | undefined
+   readonly query?: Renderer.QueryOptions | undefined
+   readonly head?: boolean | undefined
+@@ -414,7 +415,10 @@ const mountCore = (
+   never,
+   Scope.Scope
+ > => {
+-  const path = rootPath(component, options?.key)
++  const resolved = options?.state === undefined || options.hydrate !== undefined
++    ? options
++    : { ...options, hydrate: hydrateRun.hydrating(options.state) }
++  const path = rootPath(component, resolved?.key)
+   const go = (decoded?: Exit.Exit<Decoded, unknown>) =>
+     Effect.uninterruptible(
+       Effect.contextWith((ctx: Context.Context<Scope.Scope>) => {
+@@ -444,7 +448,7 @@ const mountCore = (
+             props,
+             container,
+             ctx,
+-            options,
++            resolved,
+             hostOf(ctx),
+             undefined,
+             decoded && [path, decoded]
+@@ -460,7 +464,7 @@ const mountCore = (
+           : Effect.succeed(made.root)
+       })
+     )
+-  const hydrate = options?.hydrate
++  const hydrate = resolved?.hydrate
+   return hydrate === undefined
+     ? go(undefined)
+     : hydrate.decode(component as unknown as Kernel.Runnable, path, go)
+@@ -763,6 +767,15 @@ const start = (
+     model: () => instance.failure === undefined ? instance.model : undefined,
+     send: (message: unknown) => recording.step(() => mounted.send(message)),
+     setProps: (props: unknown) => recording.step(() => mounted.setProps(props)),
++    snapshot: Effect.suspend(() =>
++      serialize.write(
++        serialize.snapshot(instance, new Set<Kernel.Instance>(), undefined),
++        undefined,
++        ctx,
++        false,
++        serialize.mute
++      )
++    ),
+     find: (born: number) =>
+       findIn(instance, born, recording.numberOf) as Instance | undefined,
+     numberOf: recording.numberOf as unknown as Root["numberOf"],
+diff --git a/src/internal/serialize.ts b/src/internal/serialize.ts
+index fefe5b267aef0fe895d8d1774fbe1407e1376f4a..c4a8e263960dc3679ebb04da4771b1a9cfc87c09 100644
+--- a/src/internal/serialize.ts
++++ b/src/internal/serialize.ts
+@@ -230,7 +230,7 @@ export const encodeProps = (
+   )
+ 
+ const ignore = () => {}
+-const mute: services.ServerSink = {
++export const mute: services.ServerSink = {
+   text: ignore,
+   open: ignore,
+   close: ignore,
