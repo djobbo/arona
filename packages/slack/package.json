@@ -1,0 +1,54 @@
+{
+  "name": "@arona/slack",
+  "version": "0.0.0-dev",
+  "description": "Slack integration for Arona",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/djobbo/arona.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "require": "./dist/testing.cjs",
+      "import": "./dist/testing.js"
+    }
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "test": "vp test",
+    "check:types": "tsc --noEmit",
+    "check:lint": "vp lint"
+  },
+  "dependencies": {
+    "@arona/core": "workspace:*",
+    "@effect/ui": "catalog:",
+    "@slack/bolt": "^5.1.0",
+    "@slack/types": "^3.3.1",
+    "@slack/web-api": "^8.5.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "catalog:",
+    "effect": "catalog:",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "^4.1.6",
+    "typescript": "^5.8.3"
+  }
+}

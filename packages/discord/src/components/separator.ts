@@ -1,20 +1,13 @@
-import { type AronaNode, defineComponent } from "@arona/core"
-import { SeparatorBuilder, type SeparatorComponentData } from "discord.js"
-import type { AronaDiscordProps } from "./types"
+import type * as Discord from "../vocabulary";
 
-export interface SeparatorProps
-	extends AronaDiscordProps<SeparatorComponentData> {}
+export interface SeparatorProps {
+  readonly divider?: boolean;
+  readonly spacing?: number;
+}
 
-export const separatorComponent = defineComponent({
-	name: "arona:separator",
-	allowedChildren: [],
-	render: () => (node: AronaNode<SeparatorProps>) => {
-		const separator = new SeparatorBuilder({
-			...node.props,
-		})
-
-		return {
-			components: [separator],
-		}
-	},
-})
+/** A visual separator between Components V2 elements. */
+export const Separator = <Msg>(h: Discord.H<Msg>, props: SeparatorProps = {}) =>
+  h.separator.attrs({
+    divider: props.divider === false ? "false" : undefined,
+    spacing: props.spacing?.toString(),
+  });

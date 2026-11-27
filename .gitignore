@@ -179,3 +179,9 @@ dist
 
 # Arona libs output
 dist
+# Local scratch / pnpm
+.tmp
+.pnpm-store
+
+# Test artifacts
+.vitest

@@ -1,158 +1,177 @@
-import { type AronaNode, defineComponent, useRootNode } from "@arona/core"
-import {
-	ActionRowBuilder,
-	ModalBuilder,
-	TextInputBuilder,
-	TextInputStyle,
-} from "discord.js"
-import type {
-	AutocompleteInteraction,
-	Interaction,
-	ModalComponentData,
-	ModalSubmitInteraction,
-	TextInputComponentData,
-} from "discord.js"
-import type { ReactNode } from "react"
-import type { DiscordRootNode } from "../discord-root-node"
-import type { AronaDiscordProps } from "./types"
+import { type View } from "@effect/ui";
+import { Schema } from "effect";
+import type { TextInputStyle } from "discord.js";
+import type { ModalSubmitPayload } from "../types";
+import { Option } from "./select";
+import * as Discord from "../vocabulary";
 
-export type ModalInteractionRef = Exclude<
-	Interaction,
-	AutocompleteInteraction | ModalSubmitInteraction
->
+const ModalProps = Schema.Struct({
+  title: Schema.String,
+  customId: Schema.optional(Schema.String),
+});
 
-export type ModalComponent = ({
-	interaction,
-}: {
-	interaction: ModalInteractionRef
-}) => JSX.Element
+export const modalComponent = Discord.component({
+  name: "Modal",
+  props: ModalProps,
+  model: Schema.Struct({}),
+  message: Schema.Never,
+}).make({
+  init: () => ({}),
+  update: ($) => $.model,
+  parts: (p) => ({
+    modal: p.part("modal", (builder) => {
+      return builder.attr("title", p.props.title).attr("customId", p.props.customId);
+    }),
+  }),
+});
 
-export const useModal = () => {
-	const rootNode = useRootNode() as DiscordRootNode
+export type TextInputStyleName = "Short" | "Paragraph";
 
-	return {
-		openModal: (Code: ModalComponent) => (interaction: ModalInteractionRef) => {
-			rootNode.renderModal(Code, interaction)
-			// Prevent interaction from being deferred
-			return true
-		},
-	}
+export interface TextInputProps {
+  /** The key the submitted value is exposed under. */
+  readonly name?: string;
+  readonly customId?: string;
+  readonly style?: TextInputStyleName | TextInputStyle;
+  readonly value?: string;
+  readonly placeholder?: string;
+  readonly required?: boolean;
+  readonly minLength?: number;
+  readonly maxLength?: number;
 }
 
-export interface TextInputProps
-	extends Omit<
-		AronaDiscordProps<TextInputComponentData>,
-		"customId" | "style"
-	> {
-	/**
-	 * @deprecated Custom IDs are not recommended unless you know what you're doing.
-	 * They are used to identify the text input in each interaction.
-	 * If set manually, it should be unique per text input, and per interaction.
-	 */
-	customId?: ModalComponentData["customId"]
-	name: string
-	onChange?: (value: string, interaction: Interaction) => unknown
-	required?: boolean
-	style?: TextInputComponentData["style"]
+/** One text input inside a modal label. */
+export const TextInput = <Msg>(h: Discord.H<Msg>, props: TextInputProps) =>
+  h.textInput
+    .attr("customId", props.customId)
+    .prop("name", props.name)
+    .prop("style", props.style)
+    .prop("value", props.value)
+    .prop("placeholder", props.placeholder)
+    .prop("required", props.required)
+    .prop("minLength", props.minLength)
+    .prop("maxLength", props.maxLength);
+
+export interface ModalOptions<Msg, C extends View.Children<Msg>> {
+  readonly title: string;
+  readonly customId?: string;
+  /** Receives the submitted values, keyed by each input's `name`. */
+  readonly onSubmit?: View.Handler<Msg, ModalSubmitPayload>;
+  readonly children: C;
 }
 
-export const textInputComponent = defineComponent({
-	name: "arona:text-input",
-	allowedChildren: [],
-	render: () => (node: AronaNode<TextInputProps>) => {
-		const {
-			customId = node.uuid,
-			value,
-			required = false,
-			name,
-			onChange,
-			style = TextInputStyle.Short,
-			...props
-		} = node.props
+/**
+ * A modal. Rendering it asks Discord to show it on the interaction that led to
+ * this render; removing it from the view closes nothing, because Discord owns
+ * the modal once shown.
+ */
+export const Modal = <Msg, C extends View.Children<Msg>>(
+  h: Discord.H<Msg>,
+  options: ModalOptions<Msg, C>,
+) =>
+  modalComponent(h, {
+    props: { title: options.title, customId: options.customId },
+    view: (modal) => {
+      const base = modal.modal(h.modal);
+      return options.onSubmit === undefined
+        ? base.children(options.children)
+        : base.on("submit", options.onSubmit).children(options.children);
+    },
+  });
 
-		const textInput = new TextInputBuilder({
-			customId,
-			...(value ? { value } : void 0),
-			required,
-			style,
-			...props,
-		})
-
-		// TODO: check if inside action row
-		const actionRow = new ActionRowBuilder<TextInputBuilder>({
-			components: [textInput],
-		})
-
-		return {
-			component: actionRow,
-			customId,
-			name,
-			onChange,
-		}
-	},
-})
-
-export interface ModalProps
-	extends Omit<ModalComponentData, "customId" | "components"> {
-	/**
-	 * @deprecated Custom IDs are not recommended unless you know what you're doing.
-	 * They are used to identify the modal in each interaction.
-	 * If set manually, it should be unique per modal, and per interaction.
-	 */
-	customId?: ModalComponentData["customId"]
-	onSubmit?: (
-		values: Record<string, string>,
-		interaction: Interaction,
-	) => unknown
-	children?: ReactNode
+export interface LabelOptions<Msg, C extends View.Children<Msg>> {
+  readonly label: string;
+  readonly description?: string;
+  /** Exactly one field component. */
+  readonly children: C;
 }
 
-export const modalComponent = defineComponent({
-	name: "arona:modal",
-	allowedChildren: [textInputComponent],
-	render: (renderChildren) => (node: AronaNode<ModalProps>) => {
-		const textInputs = renderChildren(node.children)
+/** Groups a field with its label and optional description. */
+export const Label = <Msg, C extends View.Children<Msg>>(
+  h: Discord.H<Msg>,
+  options: LabelOptions<Msg, C>,
+) =>
+  h.label
+    .attr("label", options.label)
+    .attr("description", options.description)
+    .children(options.children);
 
-		const {
-			customId = node.uuid,
-			children: _children,
-			onSubmit,
-			...props
-		} = node.props
+export interface CheckboxProps {
+  /** The key the submitted value is exposed under. */
+  readonly name?: string;
+  readonly customId?: string;
+  readonly defaultChecked?: boolean;
+}
 
-		const modal = new ModalBuilder({
-			customId,
-			...props,
-			components: textInputs.map(({ component }) => component),
-		})
+/** A single checkbox, used inside a modal. */
+export const Checkbox = <Msg>(h: Discord.H<Msg>, props: CheckboxProps) =>
+  h.checkbox
+    .attr("customId", props.customId)
+    .prop("name", props.name)
+    .prop("default", props.defaultChecked);
 
-		const listener = async (interaction: Interaction) => {
-			if (!interaction.isModalSubmit()) return
-			if (interaction.customId !== customId) return
+export interface CheckboxGroupOptions<Msg, C extends View.Children<Msg>> {
+  readonly name?: string;
+  readonly customId?: string;
+  readonly minValues?: number;
+  readonly maxValues?: number;
+  readonly required?: boolean;
+  readonly children: C;
+}
 
-			const props = new Map<string, string>()
+/** One option of a checkbox group. Uses the same shape as a select option. */
+export const CheckboxOption = Option;
 
-			textInputs.map((input) => {
-				const value = interaction.fields.getTextInputValue(input.customId)
-				input.onChange?.(value, interaction)
+/** A multi-select group of checkboxes, used inside a modal. */
+export const CheckboxGroup = <Msg, C extends View.Children<Msg>>(
+  h: Discord.H<Msg>,
+  options: CheckboxGroupOptions<Msg, C>,
+) =>
+  h.checkboxGroup
+    .attr("customId", options.customId)
+    .attr("name", options.name)
+    .attr("minValues", options.minValues?.toString())
+    .attr("maxValues", options.maxValues?.toString())
+    .attr("required", options.required === undefined ? undefined : options.required ? "" : "false")
+    .children(options.children);
 
-				if (!input.name) return
-				props.set(input.name, value)
-			})
+export interface RadioGroupOptions<Msg, C extends View.Children<Msg>> {
+  readonly name?: string;
+  readonly customId?: string;
+  readonly required?: boolean;
+  readonly children: C;
+}
 
-			if (
-				!(await node.props.onSubmit?.(Object.fromEntries(props), interaction))
-			) {
-				await interaction.deferUpdate()
-			}
-		}
+/** One option of a radio group. Uses the same shape as a select option. */
+export const RadioOption = Option;
 
-		const interactionListeners = [[customId, listener]] as const
+/** A single-choice group of radio options, used inside a modal. */
+export const RadioGroup = <Msg, C extends View.Children<Msg>>(
+  h: Discord.H<Msg>,
+  options: RadioGroupOptions<Msg, C>,
+) =>
+  h.radioGroup
+    .attr("customId", options.customId)
+    .attr("name", options.name)
+    .attr("required", options.required === undefined ? undefined : options.required ? "" : "false")
+    .children(options.children);
 
-		return {
-			components: [modal],
-			files: [],
-			interactionListeners,
-		}
-	},
-})
+export type FileUploadType = "audio" | "image" | "video" | `.${string}`;
+
+export interface FileUploadProps {
+  readonly name?: string;
+  readonly customId?: string;
+  readonly minValues?: number;
+  readonly maxValues?: number;
+  readonly fileTypes?: ReadonlyArray<FileUploadType>;
+  readonly required?: boolean;
+}
+
+/** A file upload field, used inside a modal. */
+export const FileUpload = <Msg>(h: Discord.H<Msg>, props: FileUploadProps) =>
+  h.fileUpload
+    .attr("customId", props.customId)
+    .attr("name", props.name)
+    .prop("minValues", props.minValues)
+    .prop("maxValues", props.maxValues)
+    .prop("fileTypes", props.fileTypes)
+    .attr("required", props.required === undefined ? undefined : props.required ? "" : "false");

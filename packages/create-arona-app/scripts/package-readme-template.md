@@ -1,57 +1,20 @@
 # create-arona-app
 
-Create a new Arona app with a single command.
-
-## Usage
+Create a new [Arona](https://github.com/djobbo/arona) app with one command.
 
 ```bash
-# Using bun
-bun create arona-app my-app
-
-# Using npm
-npm create arona-app my-app
-
-# Using yarn
-yarn create arona-app my-app
-
-# Using pnpm
-pnpm create arona-app my-app
+pnpm create arona-app my-bot
 ```
 
 ## Templates
 
-The following templates are available:
-
 {{templatesList}}
-
-## Features
-
-- Interactive CLI with project name validation
-- Template selection
-- Package manager selection (npm, yarn, pnpm, bun)
-- Automatic package.json configuration
-- Clear next steps instructions
 
 ## Development
 
-To work on this package locally:
+```bash
+pnpm install
+pnpm build
+```
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   bun install
-   # or
-   npm install
-   # or
-   yarn install
-   # or
-   pnpm install
-   ```
-3. Link the package:
-   ```bash
-   npm link
-   ```
-4. Test the package:
-   ```bash
-   create-arona-app my-test-app
-   ``` 
+The build copies the workspace examples into `templates/` and rewrites them to standalone packages.

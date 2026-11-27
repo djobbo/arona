@@ -1,22 +1,20 @@
-import { type AronaNode, defineComponent } from "@arona/core"
-import { ThumbnailBuilder, type ThumbnailComponentData } from "discord.js"
-import type { InteractionListenerEntry } from "../types"
-import type { AronaDiscordProps } from "./types"
+import type * as Discord from "../vocabulary";
+import type { Attachment } from "./helpers/create-attachment";
 
-export interface ThumbnailProps
-	extends AronaDiscordProps<ThumbnailComponentData> {}
+export type ThumbnailSource =
+  | { readonly url: string }
+  | { readonly file: Attachment; readonly name?: string };
 
-export const thumbnailComponent = defineComponent({
-	name: "arona:thumbnail",
-	allowedChildren: [],
-	render: () => (node: AronaNode<ThumbnailProps>) => {
-		const thumbnail = new ThumbnailBuilder({
-			...node.props,
-		})
+export type ThumbnailProps = ThumbnailSource & {
+  readonly description?: string;
+  readonly spoiler?: boolean;
+};
 
-		return {
-			components: [thumbnail],
-			listenerEntries: [] as InteractionListenerEntry[],
-		}
-	},
-})
+/** A thumbnail, usually the accessory of a section. */
+export const Thumbnail = <Msg>(h: Discord.H<Msg>, props: ThumbnailProps) =>
+  ("url" in props
+    ? h.thumbnail.prop("url", props.url)
+    : h.thumbnail.prop("file", props.file).prop("name", props.name)
+  )
+    .prop("description", props.description)
+    .prop("spoiler", props.spoiler);

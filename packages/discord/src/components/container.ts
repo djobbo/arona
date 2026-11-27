@@ -1,47 +1,22 @@
-import { type AronaNode, defineComponent } from "@arona/core"
-import {
-	type APIContainerComponent,
-	type ColorResolvable,
-	ContainerBuilder,
-	resolveColor,
-} from "discord.js"
-import type { ReactNode } from "react"
-import { topLevelComponents } from "./helpers/top-level-components"
-import type { AronaDiscordProps } from "./types"
+import type { View } from "@effect/ui";
+import type * as Discord from "../vocabulary";
 
-export interface ContainerProps
-	extends Omit<
-		AronaDiscordProps<APIContainerComponent>,
-		"accent_color" | "components"
-	> {
-	accentColor?: ColorResolvable
-	children?: ReactNode
+export interface ContainerProps {
+  readonly accentColor?: string;
+  readonly spoiler?: boolean;
 }
 
-export const containerComponent = defineComponent({
-	name: "arona:container",
-	allowedChildren: topLevelComponents,
-	render: (renderChildren) => (node: AronaNode<ContainerProps>) => {
-		const content = renderChildren(node.children)
-		const container = new ContainerBuilder({
-			// @ts-ignore
-			components: content.flatMap((component) => component.components),
-			accent_color: node.props.accentColor
-				? resolveColor(node.props.accentColor)
-				: undefined,
-			spoiler: node.props.spoiler,
-		})
+export interface ContainerOptions<Msg, C extends View.Children<Msg>> {
+  readonly props?: ContainerProps;
+  readonly children: C;
+}
 
-		return {
-			components: [container],
-			listenerEntries: content
-				.flatMap((component) =>
-					"listenerEntries" in component ? component.listenerEntries : [],
-				)
-				.filter(Boolean),
-			files: content.flatMap((component) =>
-				"files" in component ? component.files : [],
-			),
-		}
-	},
-})
+/** A Components V2 container, the top-level grouping element. */
+export const Container = <Msg, C extends View.Children<Msg>>(
+  h: Discord.H<Msg>,
+  { props, children }: ContainerOptions<Msg, C>,
+) =>
+  h.container
+    .attr("accentColor", props?.accentColor)
+    .attr("spoiler", props?.spoiler ? "" : undefined)
+    .children(children);

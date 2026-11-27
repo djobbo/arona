@@ -1,15 +1,16 @@
-# default
-
-To install dependencies:
+# Arona example
 
 ```bash
-bun install
+pnpm install
+cp .env.example .env
+pnpm dev
 ```
 
-To run:
+Set `DISCORD_APP_TOKEN`, `DISCORD_APP_ID`, and optionally `DISCORD_DEV_GUILD_ID` in `.env`.
 
-```bash
-bun run index.ts
-```
+`pnpm dev` watches the sources, rebuilds the bot, and restarts it. `pnpm build` writes a production bundle to `dist/index.js`.
 
-This project was created using `bun init` in bun v1.2.9. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+In development the example installs a console telemetry runtime, so message,
+command, and interaction spans are printed to the terminal. Swap
+`Telemetry.create({ console: true })` for an OTLP configuration to send traces
+to a collector instead.

@@ -4,14 +4,14 @@ description: Get started building interactive experiences on Discord with Arona.
 template: splash
 hero:
   title: |
-    <span class="text-xs text-accent block uppercase">discord.js ❤️ react ❤️ jsx</span>
+    <span class="text-xs text-accent block uppercase">discord.js + effect + effect/ui</span>
     <span class="font-bold">Build interactive experiences, effortlessly.</span>
   tagline: |
     <span class="text-lg">
       Discover a new way to build Discord bots with
       <span class="text-accent">Arona</span>,
-      a framework that combines the power of Discord.JS
-      with the ease of React and JSX.
+      a framework that combines Discord.JS with Effect and the
+      host-agnostic <code>@effect/ui</code> component model.
     </span>
   image:
     file: ../../assets/arona.svg
@@ -25,22 +25,23 @@ hero:
       icon: external
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Card, CardGrid } from "@astrojs/starlight/components";
 
 ### What it's all about
 
 <CardGrid stagger>
-	<Card title="Highly interactive bots" icon="setting">
-		Build bots with rich interactions and engaging UIs for your users.
-	</Card>
-	<Card title="Effortlessy write and maintain your UIs" icon="seti:html">
-		Using JSX and React, creating and updating your bot is a breeze.
-	</Card>
-	<Card title="The power of Discord.JS" icon="rocket">
-		Arona is built on top of Discord.JS, so you can use all its features.
-	</Card>
-	<Card title="Get started now!" icon="open-book">
-		Are you ready to get started? Check out our guides and reference documentation.
-    Learn more [here](/guides/overview).
-	</Card>
+  <Card title="Highly interactive bots" icon="setting">
+    Build bots with rich interactions and engaging UIs for your users.
+  </Card>
+  <Card title="Elm-style components" icon="seti:html">
+    Every component owns a Schema-defined Model, a pure update, and a view. No hooks, no stale
+    closures.
+  </Card>
+  <Card title="Built on Effect" icon="rocket">
+    Commands, queries and services are Effects, so failures and async work are typed and testable.
+  </Card>
+  <Card title="Get started now!" icon="open-book">
+    Are you ready to get started? Check out our guides and reference documentation. Learn more
+    [here](/guides/overview).
+  </Card>
 </CardGrid>

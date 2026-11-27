@@ -1,37 +1,12 @@
-import { type AronaNode, defineComponent } from "@arona/core"
-import { FileBuilder, type FileComponentData } from "discord.js"
-import { type Attachment, createAttachment } from "./helpers/create-attachment"
-import type { AronaDiscordProps } from "./types"
+import type * as Discord from "../vocabulary";
+import type { Attachment } from "./helpers/create-attachment";
 
-export interface FileProps
-	extends Omit<AronaDiscordProps<FileComponentData>, "file"> {
-	file: Attachment
-	name?: string
+export interface FileProps {
+  readonly file: Attachment;
+  readonly name?: string;
+  readonly spoiler?: boolean;
 }
 
-export const fileComponent = defineComponent({
-	name: "arona:file",
-	allowedChildren: [],
-	render: () => (node: AronaNode<FileProps>) => {
-		const { file: fileProp, name, ...props } = node.props
-
-		if (!fileProp) {
-			console.warn(`File ${node.uuid} has no file. It will not be rendered.`)
-			return null
-		}
-
-		const attachment = createAttachment(fileProp, name ?? node.uuid)
-
-		const file = new FileBuilder({
-			file: {
-				url: attachment.url,
-			},
-			...props,
-		})
-
-		return {
-			components: [file],
-			files: [attachment.data],
-		}
-	},
-})
+/** A file attachment displayed as a Components V2 file component. */
+export const File = <Msg>(h: Discord.H<Msg>, props: FileProps) =>
+  h.file.prop("file", props.file).prop("name", props.name).prop("spoiler", props.spoiler);

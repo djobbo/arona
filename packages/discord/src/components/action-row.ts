@@ -1,30 +1,12 @@
-import {
-	type AronaNode,
-	defineComponent,
-	renderComponentNodes,
-} from "@arona/core"
-import { ActionRowBuilder } from "discord.js"
-import type { ReactNode } from "react"
-import { buttonComponent } from "./button"
+import type { View } from "@effect/ui";
+import type * as Discord from "../vocabulary";
 
-export interface ActionRowProps {
-	children: ReactNode
+export interface ActionRowOptions<Msg, C extends View.Children<Msg>> {
+  readonly children: C;
 }
 
-export const actionRowComponent = defineComponent({
-	name: "arona:action-row",
-	allowedChildren: [buttonComponent],
-	render: (renderChildren) => (node: AronaNode<ActionRowProps>) => {
-		const content = renderChildren(node.children)
-		const actionRow = new ActionRowBuilder({
-			components: content.flatMap(({ components }) => components),
-		}).toJSON()
-
-		return {
-			components: [actionRow],
-			listenerEntries: content.flatMap(
-				({ listenerEntries }) => listenerEntries,
-			),
-		}
-	},
-})
+/** A row holding interactive components such as buttons and selects. */
+export const ActionRow = <Msg, C extends View.Children<Msg>>(
+  h: Discord.H<Msg>,
+  { children }: ActionRowOptions<Msg, C>,
+) => h.actionRow.children(children);

@@ -1,79 +1,110 @@
-import child from "node:child_process"
-import path from "node:path"
-import { rspack } from "@rspack/core"
-import { createRspackConfig } from "./rspack.config"
+import child from "node:child_process";
+import path from "node:path";
+import { build as viteBuild } from "vite";
+import { createAronaViteConfig } from "./config";
 
-const startDevServer = async (
-	{
-		entry,
-		outputFile,
-		outputFolder: outputPath,
-	}: {
-		entry: string
-		outputFile: string
-		outputFolder: string
-	},
-	callback: Parameters<typeof rspack.Compiler.prototype.watch>[1],
-) => {
-	const compiler = rspack(
-		createRspackConfig({
-			entry,
-			outputFile,
-			outputFolder: outputPath,
-			mode: "development",
-			hot: true,
-		}),
-	)
-
-	compiler.hooks.watchRun.tap("WatchRunPlugin", (compiler) => {
-		console.log("Compilation starting after file change...")
-	})
-
-	return compiler.watch(
-		{
-			ignored: /node_modules/,
-			aggregateTimeout: 300,
-			poll: 1000,
-		},
-		callback,
-	)
+export interface DevOptions {
+  /** Arguments forwarded to the bot process. */
+  readonly argv?: ReadonlyArray<string>;
+  /** Output directory. Defaults to `<cwd>/node_modules/.arona`. */
+  readonly outDir?: string;
+  /** Called after each rebuild, primarily for tests. */
+  readonly onRestart?: (outputFile: string) => void;
 }
 
-export const dev = async (entry: string, argv: string[] = []) => {
-	console.log("⚙️ Starting development server...")
+/**
+ * Starts the file watcher and keeps a bot process running against the latest
+ * build. Effect UI owns rendering, so there is no framework hot reload to
+ * preserve: a rebuild restarts the process.
+ */
+export const dev = async (
+  entry: string,
+  { argv = [], outDir, onRestart }: DevOptions = {},
+): Promise<child.ChildProcess | null> => {
+  const outputDir = outDir ?? path.resolve(process.cwd(), "node_modules", ".arona");
+  const outputFile = path.join(outputDir, "index.js");
 
-	const rootPath = process.cwd()
-	const outputFolder = path.resolve(rootPath, "node_modules", ".arona")
-	const outputFile = "index.js"
-	const outputPath = path.join(outputFolder, outputFile)
+  let botProcess: child.ChildProcess | null = null;
+  let built = false;
 
-	let childProcess: child.ChildProcess | null = null
+  const stop = async (): Promise<void> => {
+    const previous = botProcess;
+    botProcess = null;
+    if (!previous || previous.exitCode !== null || previous.signalCode !== null) return;
 
-	await new Promise<void>((resolve, reject) => {
-		startDevServer({ entry, outputFile, outputFolder }, (err, stats) => {
-			if (err) {
-				console.error({ err })
-				reject(err)
-				return
-			}
+    await new Promise<void>((resolve) => {
+      let settled = false;
+      let timer: ReturnType<typeof setTimeout>;
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      timer = setTimeout(() => {
+        previous.kill("SIGKILL");
+        done();
+      }, 2_000);
+      previous.once("exit", done);
+      previous.kill("SIGTERM");
+    });
+  };
 
-			if (stats?.hash) {
-				if (!childProcess) {
-					childProcess = child.fork(outputPath, argv, {
-						env: {
-							...process.env,
-							NODE_ENV: "development",
-						},
-						stdio: "inherit",
-					})
+  let restartQueue: Promise<void> = Promise.resolve();
+  let restartGeneration = 0;
 
-					resolve()
-					console.log("⬆️ Development server is up!")
-				}
-				// Don't restart the process - let HMR handle the updates
-			}
-		})
-	})
+  const restart = (): Promise<void> => {
+    // Never overlap bot instances: two gateways for one token would both
+    // receive interactions, and the second reply fails with Unknown interaction.
+    const generation = ++restartGeneration;
+    const next = restartQueue.then(async () => {
+      // A newer build superseded this one while it was queued.
+      if (generation !== restartGeneration) return;
 
-	console.log("⬆️ Development server is ready for HMR!")
-}
+      await stop();
+      if (generation !== restartGeneration) return;
+
+      botProcess = child.fork(outputFile, [...argv], {
+        env: { ...process.env, NODE_ENV: "development" },
+        stdio: "inherit",
+      });
+      onRestart?.(outputFile);
+    });
+    restartQueue = next.catch(() => {});
+    return next;
+  };
+
+  const config = createAronaViteConfig({
+    entry,
+    mode: "development",
+    outDir: outputDir,
+    watch: true,
+  });
+  config.plugins = [
+    {
+      name: "arona-restart-bot",
+      async closeBundle() {
+        await restart();
+        built = true;
+      },
+    },
+  ];
+
+  const watcher = await viteBuild(config);
+  const cleanup = () => {
+    botProcess?.kill("SIGKILL");
+    botProcess = null;
+    if (typeof watcher === "object" && "close" in watcher) {
+      void watcher.close();
+    }
+    process.exit(0);
+  };
+  process.once("SIGINT", cleanup);
+  process.once("SIGTERM", cleanup);
+
+  if (!built) {
+    console.log("⚙️ Watching for changes...");
+  }
+
+  return botProcess;
+};
